@@ -1,0 +1,13 @@
+name = Restless
+description = a custom theme for Restless development's CiviCRM site
+core = 7.x
+
+;----------// Stylesheets
+stylesheets[all][] = css/style.css
+
+;----------// Custom regions
+regions[sidebar_first] = Left sidebar
+regions[sidebar_second] = Right sidebar
+regions[content] = Content
+regions[header] = Header
+regions[footer] = Footer
