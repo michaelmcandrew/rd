@@ -78,4 +78,20 @@
       </ActivityTypes>
     </ActivitySet>
   </ActivitySets>
+  <CaseRoles>
+    <RelationshipType>
+        <name>Programme Design Lead</name>
+        <creator>1</creator>
+        <manager>1</manager>
+    </RelationshipType>
+    <RelationshipType>
+        <name>Finance Lead</name>
+    </RelationshipType>
+    <RelationshipType>
+        <name>Country Programme Lead</name>
+    </RelationshipType>
+    <RelationshipType>
+        <name>Approver</name>
+    </RelationshipType>
+ </CaseRoles>
 </CaseType>
