@@ -1,4 +1,6 @@
 <?php
 require_once('config.php');
-$contacts = civicrm_api('Contact', 'get', $params);
-print_r($contacts);
+$result = CRM_Core_DAO::executeQuery( 'SELECT * FROM rd_data.institution' );
+while($result->fetch()){
+	print_r($result);
+}
