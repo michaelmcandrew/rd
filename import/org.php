@@ -25,7 +25,7 @@ while ($query_result->fetch()) {
     'version' => '3',
     'contact_type' => 'Organization',
     'contact_sub_type' => array($contact_sub_type),
-    'organization_name' => 'Test-1' . ' ' . $trust_name,
+    'organization_name' => $trust_name,
     'external_identifier' => $institution_key,
   );
 
@@ -37,7 +37,6 @@ while ($query_result->fetch()) {
   if ($api_result['is_error']) {
     print_r($api_result);
     print_r($params);
-    exit;
   }
 }
 
