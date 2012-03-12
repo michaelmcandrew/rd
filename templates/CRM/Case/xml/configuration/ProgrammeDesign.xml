@@ -17,7 +17,13 @@
       <name>Complete budget</name>
     </ActivityType>
     <ActivityType>
-      <name>Review and submit proposal</name>
+      <name>Finance review</name>
+    </ActivityType>
+    <ActivityType>
+      <name>SMT review</name>
+    </ActivityType>
+    <ActivityType>
+      <name>Submit</name>
     </ActivityType>
     <ActivityType>
       <name>Follow up</name>
@@ -64,9 +70,21 @@
           <reference_select>newest</reference_select>
         </ActivityType>
         <ActivityType>
-          <name>Review and submit proposal</name>
+          <name>Finance review</name>
           <reference_activity>Open Case</reference_activity>
           <reference_offset>56</reference_offset>
+          <reference_select>newest</reference_select>
+        </ActivityType>
+        <ActivityType>
+          <name>SMT review</name>
+          <reference_activity>Open Case</reference_activity>
+          <reference_offset>56</reference_offset>
+          <reference_select>newest</reference_select>
+        </ActivityType>
+        <ActivityType>
+          <name>Submit</name>
+          <reference_activity>Open Case</reference_activity>
+          <reference_offset>63</reference_offset>
           <reference_select>newest</reference_select>
         </ActivityType>
         <ActivityType>
@@ -80,7 +98,7 @@
   </ActivitySets>
   <CaseRoles>
     <RelationshipType>
-        <name>Programme Design Lead</name>
+        <name>Programme design lead</name>
         <creator>1</creator>
         <manager>1</manager>
     </RelationshipType>
