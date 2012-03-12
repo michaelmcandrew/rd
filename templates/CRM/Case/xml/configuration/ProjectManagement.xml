@@ -54,5 +54,8 @@
         <creator>1</creator>
         <manager>1</manager>
     </RelationshipType>
+    <RelationshipType>
+        <name>Country programme lead</name>
+    </RelationshipType>
  </CaseRoles>
 </CaseType>
