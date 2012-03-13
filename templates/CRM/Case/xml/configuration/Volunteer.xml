@@ -35,4 +35,48 @@
       <name>Link Cases</name>
     </ActivityType>
   </ActivityTypes>
+  <ActivitySets>
+    <ActivitySet>
+      <name>standard_timeline</name>
+      <label>Standard Timeline</label>
+      <timeline>true</timeline>
+      <ActivityTypes>
+        <ActivityType>
+          <name>Open Case</name>
+          <status>Completed</status>
+        </ActivityType>
+        <ActivityType>
+          <name>Volunteer approved</name>
+          <reference_activity>Open Case</reference_activity>
+          <reference_offset>7</reference_offset>
+          <reference_select>newest</reference_select>
+        </ActivityType>
+        <ActivityType>
+          <name>Volunteer placement arranged</name>
+          <reference_activity>Open Case</reference_activity>
+          <reference_offset>28</reference_offset>
+          <reference_select>newest</reference_select>
+        </ActivityType>
+        <ActivityType>
+          <name>Volunteer in placement</name>
+          <reference_activity>Open Case</reference_activity>
+          <reference_offset>56</reference_offset>
+          <reference_select>newest</reference_select>
+        </ActivityType>
+        <ActivityType>
+          <name>Volunteer completed placement</name>
+          <reference_activity>Volunteer in placement</reference_activity>
+          <reference_offset>365</reference_offset>
+          <reference_select>newest</reference_select>
+        </ActivityType>
+      </ActivityTypes>
+    </ActivitySet>
+  </ActivitySets>
+  <CaseRoles>
+    <RelationshipType>
+        <name>Volunteer coordinator</name>
+        <creator>1</creator>
+        <manager>1</manager>
+    </RelationshipType>
+  </CaseRoles>
 </CaseType>
