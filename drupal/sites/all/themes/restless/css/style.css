@@ -4,7 +4,7 @@ html, body, #page {
 body {
     font-size: 12px;
     line-height: 1.5;
-	font-family: Arial, Helvetica, Sans-serif;
+	font-family: Helvetica, Arial, Sans-serif;
 	margin: 0;
 	padding: 0;
 }
@@ -13,8 +13,23 @@ ul, li, ol {
 	margin: 0;
 	padding: 0;
 }
+p {
+	margin: 0 0 10px 0;
+}
+h1, h2, h3, h4, h5, h6 {
+	font-family: 'Arial Narrow', Helvetica, Arial, Sans-serif;
+	margin: 0 0 10px 0;
+	padding: 0;
+}
 h1.title {
 	text-transform: uppercase;
+}
+h2 {
+	font-size: 2em;
+}
+h2 a {
+	color: #000;
+	text-decoration: none;
 }
 #page-wrapper {
 	min-height: 100%;
@@ -215,6 +230,12 @@ h1.title {
 #crm-container .event_info-group .display-block td {
 	padding : 4px 0;
 }
+
+.date-stamp {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
 /* --------------- System Tabs  --------------- */
 
 .tabs {
