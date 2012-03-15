@@ -145,10 +145,11 @@ h2 a {
 .sidebar .block {
     border: 1px solid;
     margin: 0 0 20px;
-    padding: 15px 20px;
+    padding: 15px 10px;
 }
 .one-sidebar #content {
-  width: 720px;
+  width: 700px;
+  margin-right: 20px;
 }
 .two-sidebars #content {
   width: 480px;
@@ -206,7 +207,7 @@ h2 a {
 #crm-container input[type="button"],
 #crm-container input.form-submit-inline, 
 #crm-container .crm-button {
-	background: #000;
+	background: #000 !important;
 	color: #fff;
 	font-size: 1.2em;
 	font-weight: bold;
@@ -230,7 +231,47 @@ h2 a {
 #crm-container .event_info-group .display-block td {
 	padding : 4px 0;
 }
-
+.news-signup #crm-container .crm-section {
+	margin-bottom: 6px;
+}
+.news-signup #crm-container .crm-section .label, 
+.news-signup #crm-container .crm-section label {
+	font-size: 1em;
+	line-height: 1em;
+	width: 100%;
+	float: none;
+	text-align: left;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+.news-signup #crm-container .crm-section .content, 
+.news-signup .crm-section .content {
+	margin: 0;
+}
+.news-signup #crm-container .big {
+	width: 212px;
+}
+.news-signup #crm-container select {
+	width: 216px;
+}
+.news-signup #crm-container table {
+	margin-top: 20px;
+	border: 0 none;
+}
+.news-signup #crm-container tr.even-row td, 
+.news-signup #crm-container tr.odd-row td {
+	border: 0 none;
+}
+.news-signup #crm-container .even-row {
+	background-color: transparent;
+}
+.news-signup #crm-container .form-layout-compressed td, 
+.news-signup #crm-container td {
+	padding: 0;
+}
+.news-signup #crm-container #crm-tagGroupTable td {
+	padding: 6px 0;
+}
 .date-stamp {
 	font-size: 1.2em;
 	font-weight: bold;
