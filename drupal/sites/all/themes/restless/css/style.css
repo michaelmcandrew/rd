@@ -275,8 +275,20 @@ h2 a {
 .date-stamp {
 	font-size: 1.2em;
 	font-weight: bold;
+	color: #999;
 }
-
+.messages-page .filter-wrapper {
+	border: 0 none;
+}
+.messages-page .views-row {
+	padding-bottom: 10px;
+	margin-bottom: 10px;
+	border-bottom: 1px solid grey;
+}
+.comment-form .form-type-item {
+	display: none;
+	visibility: hidden;
+}
 /* --------------- System Tabs  --------------- */
 
 .tabs {

@@ -987,20 +987,22 @@ div.add-or-remove-shortcuts {
   -webkit-border-radius: 8px;
   border-radius: 8px;
 }
-
 .recent-items {
-	width: 200px;
-	margin-right: 20px;
+	width: 20%;
+	margin-right: 5%;
 	float: left;
 }
 .message-board {
 	float: left;
+	width: 75%;
 }
-.comment {
-	border-top: 1px solid grey;
-	padding: 12px 0 6px;
+.message-board .views-row {
+	padding-bottom: 10px;
+	margin-bottom: 10px;
+	border-bottom: 1px solid grey;
 }
-#edit-author--2 {
-	display: none;
-	visibility: hidden;
+.message-post {
+	color: #999;
+	font-weight: bold;
+	font-size: 0.9em;
 }

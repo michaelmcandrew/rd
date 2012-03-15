@@ -58,9 +58,9 @@
  */
 ?>
 <div class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
-
   <div class="submitted">
-    <?php print $submitted; ?>
+      <?php print $author; ?>
+	  <?php print $created; ?>
   </div>
 
   <div class="content"<?php print $content_attributes; ?>>
@@ -76,4 +76,5 @@
     <?php endif; ?>
   </div>
 
+  <?php print render($content['links']) ?>
 </div>
