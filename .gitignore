@@ -2,9 +2,10 @@ drupal/sites/*/settings.php
 drupal/sites/*/civicrm.settings.php
 drupal/sites/*/files
 
+
 *~
 \#*\#
-
+.DS_Store
 *.mysql
 !drupal/sites/all/modules/civicrm/*/*.mysql
 !drupal/sites/all/modules/civicrm/*/*/*.mysql
