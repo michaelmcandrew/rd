@@ -90,7 +90,7 @@
    </div>
  </div><!-- /.crm-accordion-body -->
 </div><!-- /.crm-accordion-wrapper -->
-<script type="text/javascript">var showTab = Array( );</script> 
+<script type="text/javascript">var showTab = Array( );</script>
     {foreach from = $editOptions item = "title" key="name"}
         {if $name eq 'CustomData' }
             <div id='customData'></div> 
@@ -203,17 +203,14 @@ function removeDefaultCustomFields( ) {
      }
 
      var values = cj("#contact_sub_type").val();
-     if ( values ) {
-        var contactType = {/literal}"{$contactType}"{literal};
+     var contactType = {/literal}"{$contactType}"{literal};
+     if ( values )  {
         buildCustomData(contactType, values);
      }
-}
-
-cj(document).ready(function() {
-     if ( cj("#contact_sub_type").val() ) {
-        removeDefaultCustomFields( );
+     else{
+       	 buildCustomData(contactType);
      }
-});
+}
  
 function warnSubtypeDataLoss( )
 {
@@ -232,6 +229,7 @@ function warnSubtypeDataLoss( )
    }
    return true;
 }
+
 
 </script>
 {/literal}
