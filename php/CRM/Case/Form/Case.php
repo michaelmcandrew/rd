@@ -223,7 +223,8 @@ class CRM_Case_Form_Case extends CRM_Core_Form {
     $defaults = array_merge($defaults, CRM_Custom_Form_Customdata::setDefaultValues($this));
 	if($this->_caseTypeId){
 		$defaults['case_type_id']=$this->_caseTypeId;
-		drupal_set_title(drupal_get_title().': '.CRM_Case_BAO_Case::getCaseType($this->_caseTypeId));		
+		$cases=CRM_Case_PseudoConstant::caseType();
+		drupal_set_title(drupal_get_title().': '.$cases[$this->_caseTypeId]);		
 	}
     return $defaults;
   }
