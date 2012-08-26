@@ -91,6 +91,8 @@ class CRM_Case_Form_Case extends CRM_Core_Form {
    * @return None
    * @access public
    */ function preProcess() {
+    $this->_caseTypeId = CRM_Utils_Array::value('case_type_id', $_GET);
+
     $this->_cdType = CRM_Utils_Array::value('type', $_GET);
     $this->assign('cdType', FALSE);
     if ($this->_cdType) {
@@ -219,6 +221,10 @@ class CRM_Case_Form_Case extends CRM_Core_Form {
     }
     eval('$defaults = CRM_Case_Form_Activity_' . $this->_activityTypeFile . '::setDefaultValues($this);');
     $defaults = array_merge($defaults, CRM_Custom_Form_Customdata::setDefaultValues($this));
+	if($this->_caseTypeId){
+		$defaults['case_type_id']=$this->_caseTypeId;
+		drupal_set_title(drupal_get_title().': '.CRM_Case_BAO_Case::getCaseType($this->_caseTypeId));		
+	}
     return $defaults;
   }
 
