@@ -1,0 +1,3 @@
+name = Case types in summary actions
+description = Shows direct links to case types in CiviCRM's summary actions
+core = 7.x
