@@ -1,106 +1,99 @@
-<?xml version="1.0" encoding="iso-8859-1" ?>
-
+<?xml version="1.0" encoding="iso-8859-1"?>
 <CaseType>
-  <name>Opportunity</name>
-  <ActivityTypes>
-    <ActivityType>
-      <name>Open Case</name>
-      <max_instances>1</max_instances>
-    </ActivityType>
-    <ActivityType>
-      <name>Write initial programme design</name>
-    </ActivityType>
-    <ActivityType>
-      <name>Complete narrative</name>
-    </ActivityType>
-    <ActivityType>
-      <name>Complete budget</name>
-    </ActivityType>
-    <ActivityType>
-      <name>Finance review</name>
-    </ActivityType>
-    <ActivityType>
-      <name>Submit</name>
-    </ActivityType>
-    <ActivityType>
-      <name>Follow up</name>
-    </ActivityType>
-  	<ActivityType>
-      <name>Change Case Type</name>
-    </ActivityType>
-    <ActivityType>
-      <name>Change Case Status</name>
-    </ActivityType> 
-    <ActivityType>
-      <name>Change Case Start Date</name>
-    </ActivityType>
-    <ActivityType>
-      <name>Link Cases</name>
-    </ActivityType>
-  </ActivityTypes>
-  <ActivitySets>
-    <ActivitySet>
-      <name>standard_timeline</name>
-      <label>Standard Timeline</label>
-      <timeline>true</timeline>
-      <ActivityTypes>
+    <name>Opportunity</name>
+    <ActivityTypes>
         <ActivityType>
-          <name>Open Case</name>
-          <status>Completed</status>
+            <name>Open Case</name>
+            <max_instances>1</max_instances>
         </ActivityType>
         <ActivityType>
-          <name>Write initial programme design</name>
-          <reference_activity>Open Case</reference_activity>
-          <reference_offset>21</reference_offset>
-          <reference_select>newest</reference_select>
+            <name>Phone Call</name>
         </ActivityType>
         <ActivityType>
-          <name>Complete narrative</name>
-          <reference_activity>Open Case</reference_activity>
-          <reference_offset>49</reference_offset>
-          <reference_select>newest</reference_select>
+            <name>Meeting</name>
         </ActivityType>
-        <ActivityType>
-          <name>Complete budget</name>
-          <reference_activity>Open Case</reference_activity>
-          <reference_offset>49</reference_offset>
-          <reference_select>newest</reference_select>
-        </ActivityType>
-        <ActivityType>
-          <name>Finance review</name>
-          <reference_activity>Open Case</reference_activity>
-          <reference_offset>56</reference_offset>
-          <reference_select>newest</reference_select>
-        </ActivityType>
-        <ActivityType>
-          <name>Submit</name>
-          <reference_activity>Open Case</reference_activity>
-          <reference_offset>63</reference_offset>
-          <reference_select>newest</reference_select>
-        </ActivityType>
-        <ActivityType>
-          <name>Follow up</name>
-          <reference_activity>Open Case</reference_activity>
-          <reference_offset>70</reference_offset>
-          <reference_select>newest</reference_select>
-        </ActivityType>
-      </ActivityTypes>
-    </ActivitySet>
-  </ActivitySets>
-  <CaseRoles>
-    <RelationshipType>
-        <name>Programme design lead</name>
-        <creator>1</creator>
-        <manager>1</manager>
-    </RelationshipType>
-    <RelationshipType>
-        <name>Finance Lead</name>
-    </RelationshipType>
-    <RelationshipType>
-        <name>Country Programme Lead</name>
-    </RelationshipType>
-    <RelationshipType>
-        <name>Approver</name>
-    </RelationshipType>
- </CaseRoles>
+    </ActivityTypes>
+    <ActivitySets>
+        <ActivitySet>
+            <name>set_up</name>
+            <label>Set up</label>
+            <timeline>true</timeline>
+            <ActivityTypes>
+                <ActivityType>
+                    <name>Open Case</name>
+                    <status>Completed</status>
+                </ActivityType>
+                <ActivityType>
+                    <name>Assemble team</name>
+                    <reference_offset>7</reference_offset>
+                </ActivityType>
+                <ActivityType>
+                    <name>Draft concept</name>
+                    <reference_offset>14</reference_offset>
+                </ActivityType>
+                <ActivityType>
+                    <name>Create timeline</name>
+                    <reference_offset>14</reference_offset>
+                </ActivityType>
+            </ActivityTypes>
+        </ActivitySet>
+        <ActivitySet>
+            <name>write_proposal</name>
+            <label>Write proposal</label>
+            <timeline>true</timeline>
+            <ActivityTypes>
+                <ActivityType>
+                    <name>Write proposal</name>
+                    <reference_activity>Draft concept</reference_activity>
+                    <reference_offset>7</reference_offset>
+                </ActivityType>
+                <ActivityType>
+                    <name>Write budget</name>
+                    <reference_activity>Draft concept</reference_activity>
+                    <reference_offset>7</reference_offset>
+                </ActivityType>
+            </ActivityTypes>
+        </ActivitySet>
+        <ActivitySet>
+            <name>sign_off_and_submit</name>
+            <label>Sign off and submit</label>
+            <timeline>true</timeline>
+            <ActivityTypes>
+                <ActivityType>
+                    <name>Finance sign off</name>
+                    <reference_activity>Draft concept</reference_activity>
+                    <reference_offset>14</reference_offset>
+                </ActivityType>
+                <ActivityType>
+                    <name>Programme Quality sign off</name>
+                    <reference_activity>Draft concept</reference_activity>
+                    <reference_offset>14</reference_offset>
+                </ActivityType>
+                <ActivityType>
+                    <name>Submit proposal</name>
+                    <reference_activity>Draft concept</reference_activity>
+                    <reference_offset>21</reference_offset>
+                </ActivityType>
+            </ActivityTypes>
+        </ActivitySet>
+    </ActivitySets>
+    <CaseRoles>
+        <RelationshipType>
+            <name>Staff lead</name>
+            <creator>1</creator>
+            <manager>1</manager>
+        </RelationshipType>
+        <RelationshipType>
+            <name>Relationship manager</name>
+        </RelationshipType>
+        <RelationshipType>
+            <name>Country programme lead</name>
+        </RelationshipType>
+        <RelationshipType>
+            <name>Finance lead</name>
+        </RelationshipType>
+        <RelationshipType>
+            <name>Programme Quality lead</name>
+        </RelationshipType>
+    </CaseRoles>
 </CaseType>
