@@ -5,15 +5,15 @@ function civicrm_case_types_in_summary_actions_civicrm_summaryActions( &$actions
     require_once'CRM/Case/PseudoConstant.php';
 	$case_types=CRM_Case_PseudoConstant::caseType();
 	foreach($case_types as $case_id => $case_name){
-	    $actions['case_'.$case_id]=array(
- 	       'title' => 'Add '.$case_name,
-	       'weight' => $weight,
-	       'ref' => 'new-case',
-	       'key' => 'case_'.$case_id,
-	       'component' => 'CiviCase',
-	       'href' => "/civicrm/case/add?reset=1&action=add&atype=13&context=standalone&case_type_id={$case_id}&cid={$contactID}",
-	       'permissions' => array('add cases'),
-	    );
+        $actions['case_'.$case_id]=array(
+            'title' => 'Add '.$case_name,
+            'weight' => $weight,
+            'ref' => 'new-case-'.$case_id,
+            'key' => 'case_'.$case_id,
+            'component' => 'CiviCase',
+            'href' => "/civicrm/case/add?reset=1&action=add&atype=13&context=case&case_type_id={$case_id}",
+            'permissions' => array('add cases'),
+        );
 	    
 	}
 }
