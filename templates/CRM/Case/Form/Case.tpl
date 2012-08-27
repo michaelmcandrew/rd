@@ -84,7 +84,7 @@
     </tr>
 {/if}
 
-{if $form.activity_details.html}
+{if 0 and $form.activity_details.html}
     <tr class="crm-case-form-block-activity_details">
         <td class="label">{$form.activity_details.label}{help id="id-details" file="CRM/Case/Form/Case.hlp"}</td>
         <td class="view-value">{if $defaultWysiwygEditor eq 0}{$form.activity_details.html|crmStripAlternatives|crmReplace:class:huge40}{else}{$form.activity_details.html|crmStripAlternatives}{/if}</td>
