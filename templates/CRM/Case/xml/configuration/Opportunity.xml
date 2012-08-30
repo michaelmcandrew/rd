@@ -12,6 +12,9 @@
         <ActivityType>
             <name>Meeting</name>
         </ActivityType>
+        <ActivityType>
+            <name>Project visit</name>
+        </ActivityType>
     </ActivityTypes>
     <ActivitySets>
         <ActivitySet>
@@ -24,33 +27,54 @@
                     <status>Completed</status>
                 </ActivityType>
                 <ActivityType>
-                    <name>Assemble team</name>
-                    <reference_offset>7</reference_offset>
+                    <name>Check guidelines</name>
                 </ActivityType>
                 <ActivityType>
-                    <name>Draft concept</name>
-                    <reference_offset>14</reference_offset>
+                    <name>Assemble team</name>
                 </ActivityType>
                 <ActivityType>
                     <name>Create timeline</name>
-                    <reference_offset>14</reference_offset>
+                </ActivityType>
+                <ActivityType>
+                    <name>Identify partners</name>
                 </ActivityType>
             </ActivityTypes>
         </ActivitySet>
         <ActivitySet>
-            <name>write_proposal</name>
-            <label>Write proposal</label>
+            <name>concept_development</name>
+            <label>Concept development</label>
             <timeline>true</timeline>
             <ActivityTypes>
                 <ActivityType>
-                    <name>Write proposal</name>
-                    <reference_activity>Draft concept</reference_activity>
-                    <reference_offset>7</reference_offset>
+                    <name>Define concept</name>
                 </ActivityType>
                 <ActivityType>
-                    <name>Write budget</name>
-                    <reference_activity>Draft concept</reference_activity>
-                    <reference_offset>7</reference_offset>
+                    <name>Write concept</name>
+                </ActivityType>
+                <ActivityType>
+                    <name>Create concept budget</name>
+                </ActivityType>
+                <ActivityType>
+                    <name>Develop concept log frame</name>
+                </ActivityType>
+            </ActivityTypes>
+        </ActivitySet>
+        <ActivitySet>
+            <name>proposal_development</name>
+            <label>Proposal development</label>
+            <timeline>true</timeline>
+            <ActivityTypes>
+                <ActivityType>
+                    <name>Define proposal</name>
+                </ActivityType>
+                <ActivityType>
+                    <name>Write proposal</name>
+                </ActivityType>
+                <ActivityType>
+                    <name>Create proposal budget</name>
+                </ActivityType>
+                <ActivityType>
+                    <name>Develop proposal log frame</name>
                 </ActivityType>
             </ActivityTypes>
         </ActivitySet>
@@ -60,19 +84,10 @@
             <timeline>true</timeline>
             <ActivityTypes>
                 <ActivityType>
-                    <name>Finance sign off</name>
-                    <reference_activity>Draft concept</reference_activity>
-                    <reference_offset>14</reference_offset>
+                    <name>Sign off</name>
                 </ActivityType>
                 <ActivityType>
-                    <name>Programme Quality sign off</name>
-                    <reference_activity>Draft concept</reference_activity>
-                    <reference_offset>14</reference_offset>
-                </ActivityType>
-                <ActivityType>
-                    <name>Submit proposal</name>
-                    <reference_activity>Draft concept</reference_activity>
-                    <reference_offset>21</reference_offset>
+                    <name>Submit</name>
                 </ActivityType>
             </ActivityTypes>
         </ActivitySet>
