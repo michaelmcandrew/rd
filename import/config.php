@@ -28,6 +28,7 @@ function get_gender_id($gender){
 function get_employer_name($employer){
 	$results = civicrm_api("Contact","get", array ('version' => '3','sequential' =>'1', 'external_identifier' => $employer));
 	handle_errors($results);
+	
 	if($results['values']['0']['sort_name']){
 		 $employer = $results['values']['0']['sort_name'];
 	}

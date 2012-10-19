@@ -109,8 +109,6 @@ while ($query_result->fetch()) {
 	$gender = trimString($query_result->gender_42);
 	$alumni = trimString($query_result->alumni_43);
 	
-	$alumni_country_programme = trimString($query_result->country_programme_50);
-	$alumni_date = trimString($query_result->years_volunteered_51);
 	
 	$historical_gv_post = str_replace('Y','1' , trimString($query_result->gv_post_61));
 	$historical_gv_email = str_replace('Y','1' , trimString($query_result->gv_email_62));
@@ -118,10 +116,13 @@ while ($query_result->fetch()) {
 	$historical_gift_aid = str_replace('Y','1' , trimString($query_result->gift_aid_83));
 	$historical_managed_as = trimString($query_result->managed_as__2);
 	$historical_primary_contact = trimString($query_result->primary_contact_55);
-	
+	$historical_alumni_date = trimString($query_result->years_volunteered_51);
+	$historical_alumni_country_programme = trimString($query_result->country_programme_50);
 
 	$params = array(
 		'version' => '3',
+		'dupe_check' => true,
+		//'debug' => '1',
 		'contact_type' => 'Individual',
 		'contact_sub_type' => '',
 		'external_identifier' => $external_id,
@@ -139,8 +140,10 @@ while ($query_result->fetch()) {
 		'custom_55' => $historical_gv_email,
 		'custom_56' => $historical_network_news,
 		'custom_57' => $historical_managed_as,
-		'custom_58' => $historical_primary_contact
-		
+		'custom_58' => $historical_primary_contact,
+		'custom_59' => $historical_alumni_date,
+		'custom_60' => $historical_alumni_country_programme,
+		'email' => ''
 		);
 	
 	if ($alumni=="Y"){
@@ -176,12 +179,29 @@ while ($query_result->fetch()) {
 	if (!($gender=='')){
 		$params['gender_id'] = get_gender_id($gender);
 	}
-	
+	$phoneAndEmail = createPhoneAndEmailArray($query_result);
+	$emails = $phoneAndEmail['0'];
+	$phoneNumbers = $phoneAndEmail['1'];
+	if((count($emails)) > 0){
+		$params['email'] = $emails['0'];
+	}	
 	$results = civicrm_api("Contact","create", $params);
 	handle_errors($results, $params);
 	createAddress($results['id'], $query_result);
-	createPhoneOrEmail($results['id'],$query_result);
-	
+	//createPhoneOrEmail($results['id'],$query_result);
+	if((count($emails)) > 1){
+		foreach($emails as $email){
+			createEmail($results['id'],$email);
+		}
+	}
+	if((count($phoneNumbers)) > 0){
+		foreach($phoneNumbers as $phoneNumber){
+			createPhone($results['id'],$phoneNumber);
+		}
+	}
+	// 
+	//if count email > 1, add extra emails	
+  
 	print_r($results['id']." ");
 
 }
@@ -232,9 +252,8 @@ function createAddress($cid,$query_result){
 	handle_errors($address_create, $addressParams);
 }
 
-function createPhoneOrEmail($cid,$query_result){
-	// 	print_r($results);exit;
-	if(!($cid AND $query_result)){
+function createPhoneAndEmailArray($query_result){
+	if(!$query_result){
 		return;
 	}
 	$fields[] = trimString($query_result->tel_28);
@@ -245,15 +264,16 @@ function createPhoneOrEmail($cid,$query_result){
 		$field = str_replace(' ', '', $field);
 		$email = strpos($field, "@");
 		if (!($email === false)){
-			createEmail($cid, $field);
+			$emailArray[] = $field;
 		}else{
 			$field = str_replace('+', '', $field);
 			$phone = is_numeric($field);
 			if ($phone === true){
-				createPhone($cid, $field);
+				$phoneArray[] = $field;
 			}
 		}
 	}
+	return array($emailArray, $phoneArray);
 }
 
 function createEmail($cid,$email){
@@ -261,6 +281,7 @@ function createEmail($cid,$email){
 	if(!($cid AND $email)){
 		return;
 	}
+	
 	$emailParams=array('version' =>'3',
 	'contact_id' => $cid,
 	'location_type_id' => '3',
