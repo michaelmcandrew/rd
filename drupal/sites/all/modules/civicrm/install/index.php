@@ -38,17 +38,17 @@ if (array_key_exists('CiviCRM', $_SESSION)) {
   unset($_SESSION['CiviCRM']);
 }
 
-if (isset($_GET['mode'])) {
-  $_SESSION['install_type'] = $_GET['mode'];
+if (isset($_GET['civicrm_install_type'])) {
+  $_SESSION['civicrm_install_type'] = $_GET['civicrm_install_type'];
 }
 else {
-  if (!isset($_SESSION['install_type'])) {
-    $_SESSION['install_type'] = "drupal";
+  if (!isset($_SESSION['civicrm_install_type'])) {
+    $_SESSION['civicrm_install_type'] = "drupal";
   }
 }
 
 global $installType;
-$installType = strtolower($_SESSION['install_type']);
+$installType = strtolower($_SESSION['civicrm_install_type']);
 
 if (!in_array($installType, array(
   'drupal', 'wordpress'))) {
@@ -72,9 +72,11 @@ elseif ($installType == 'wordpress') {
 }
 
 set_include_path(get_include_path() . PATH_SEPARATOR . $crmPath);
-require_once 'CRM/Utils/System.php';
 
-$docLink = CRM_Utils_System::docURL2('Installation and Upgrades', FALSE, 'Installation Guide');
+require_once $crmPath . '/CRM/Core/ClassLoader.php';
+CRM_Core_ClassLoader::singleton()->register();
+
+$docLink = CRM_Utils_System::docURL2('Installation and Upgrades', FALSE, 'Installation Guide',NULL,NULL,"wiki");
 
 if ($installType == 'drupal') {
   //lets check only /modules/.
@@ -139,8 +141,8 @@ if (isset($_REQUEST['seedLanguage']) and isset($langs[$_REQUEST['seedLanguage']]
 global $cmsPath;
 if ($installType == 'drupal') {
   //CRM-6840 -don't force to install in sites/all/modules/
-  require_once "$crmPath/CRM/Utils/System/Drupal.php";
-  $cmsPath = CRM_Utils_System_Drupal::cmsRootPath();
+  $object = new CRM_Utils_System_Drupal();
+  $cmsPath = $object->cmsRootPath();
 
   $siteDir = getSiteDir($cmsPath, $_SERVER['SCRIPT_FILENAME']);
   $alreadyInstalled = file_exists($cmsPath . CIVICRM_DIRECTORY_SEPARATOR .
@@ -292,12 +294,21 @@ class InstallRequirements {
             "That username/password doesn't work",
           )
         )) {
-        @$this->requireMySQLVersion("5.0",
+        @$this->requireMySQLVersion("5.1",
           array(
             "MySQL $dbName Configuration",
-            "MySQL version at least 5.0",
-            "MySQL version 5.0 is required, you only have ",
+            "MySQL version at least 5.1",
+            "MySQL version 5.1 or higher is required, you only have ",
             "MySQL " . mysql_get_server_info(),
+          )
+        );
+        $this->requireMySQLAutoIncrementIncrementOne($databaseConfig['server'],
+          $databaseConfig['username'],
+          $databaseConfig['password'],
+          array(
+            "MySQL $dbName Configuration",
+            "Is auto_increment_increment set to 1",
+            "An auto_increment_increment value greater than 1 is not currently supported. Please see issue CRM-7923 for further details and potential workaround.",
           )
         );
       }
@@ -357,7 +368,7 @@ class InstallRequirements {
 
     $this->errors = NULL;
 
-    $this->requirePHPVersion('5.2.0', array("PHP Configuration", "PHP5 installed", NULL, "PHP version " . phpversion()));
+    $this->requirePHPVersion('5.3.0', array("PHP Configuration", "PHP5 installed", NULL, "PHP version " . phpversion()));
 
     // Check that we can identify the root folder successfully
     $this->requireFile($crmPath . CIVICRM_DIRECTORY_SEPARATOR . 'README.txt',
@@ -710,15 +721,19 @@ class InstallRequirements {
       return;
     }
 
-    $result = mysql_query("SHOW variables like 'have_innodb'", $conn);
-    if ($result) {
-      $values = mysql_fetch_row($result);
-      if (strtolower($values[1]) != 'yes') {
-        $this->error($testDetails);
+    $innodb_support = FALSE;
+    $result = mysql_query("SHOW ENGINES", $conn);
+    while ($values = mysql_fetch_array($result)) {
+      if ($values['Engine'] == 'InnoDB') {
+        if (strtolower($values['Support']) == 'yes' ||
+          strtolower($values['Support']) == 'default'
+        ) {
+          $innodb_support = TRUE;
+        }
       }
-      else {
-        $testDetails[3] = 'MySQL server does have innodb support';
-      }
+    }
+    if ($innodb_support) {
+      $testDetails[3] = 'MySQL server does have innodb support';
     }
     else {
       $testDetails[2] .= ' Could not determine if mysql has innodb support. Assuming no';
@@ -787,6 +802,32 @@ class InstallRequirements {
 
     $result = mysql_query('DROP TEMPORARY TABLE civicrm_install_temp_table_test');
     return;
+  }
+
+  function requireMySQLAutoIncrementIncrementOne($server, $username, $password, $testDetails) {
+    $this->testing($testDetails);
+    $conn = @mysql_connect($server, $username, $password);
+    if (!$conn) {
+      $testDetails[2] = 'Could not connect to the database server.';
+      $this->error($testDetails);
+      return;
+    }
+
+    $result = mysql_query("SHOW variables like 'auto_increment_increment'", $conn);
+    if (!$result) {
+      $testDetails[2] = 'Could not query database server variables.';
+      $this->error($testDetails);
+      return;
+    }
+    else {
+      $values = mysql_fetch_row($result);
+      if ($values[1] == 1) {
+        $testDetails[3] = 'MySQL server auto_increment_increment is 1';
+      }
+      else {
+        $this->error($testDetails);
+      }
+    }
   }
 
   function requireDatabaseOrCreatePermissions($server,
@@ -915,6 +956,8 @@ class Installer extends InstallRequirements {
   }
 
   function install($config) {
+    global $installDirPath;
+
     // create database if does not exists
     $this->createDatabaseIfNotExists($config['mysql']['server'],
       $config['mysql']['username'],
@@ -948,7 +991,7 @@ class Installer extends InstallRequirements {
         $output .= '<body>';
         $output .= '<div style="padding: 1em;"><p class="good">CiviCRM has been successfully installed</p>';
         $output .= '<ul>';
-        $docLinkConfig = CRM_Utils_System::docURL2('Configuring a New Site', FALSE, 'here');
+        $docLinkConfig = CRM_Utils_System::docURL2('Configuring a New Site', FALSE, 'here',NULL,NULL,"wiki");
         if (!function_exists('ts')) {
           $docLinkConfig = "<a href=\"{$docLinkConfig}\">here</a>";
         }
@@ -1019,7 +1062,7 @@ class Installer extends InstallRequirements {
         $output .= '<body>';
         $output .= '<div style="padding: 1em;"><p class="good">CiviCRM has been successfully installed</p>';
         $output .= '<ul>';
-        $docLinkConfig = CRM_Utils_System::docURL2('Configuring a New Site', FALSE, 'here');
+        $docLinkConfig = CRM_Utils_System::docURL2('Configuring a New Site', FALSE, 'here',NULL,NULL,"wiki");
         if (!function_exists('ts')) {
           $docLinkConfig = "<a href=\"{$docLinkConfig}\">here</a>";
         }
@@ -1064,7 +1107,7 @@ class Installer extends InstallRequirements {
         echo '<h1>CiviCRM Installed</h1>';
         echo '<div style="padding: 1em;"><p style="background-color: #0C0; border: 1px #070 solid; color: white;">CiviCRM has been successfully installed</p>';
         echo '<ul>';
-        $docLinkConfig = CRM_Utils_System::docURL2('Configuring a New Site', FALSE, 'here');
+        $docLinkConfig = CRM_Utils_System::docURL2('Configuring a New Site', FALSE, 'here',NULL,NULL,"wiki");
         if (!function_exists('ts')) {
           $docLinkConfig = "<a href=\"{$docLinkConfig}\">here</a>";
         }

@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  * @package CiviCRM_APIv3
  * @subpackage API_Membership
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: MembershipStatus.php 30171 2010-10-14 09:11:27Z mover $
  *
  */
@@ -54,7 +56,6 @@ require_once 'CRM/Member/BAO/MembershipStatus.php';
  * @access public
  */
 function civicrm_api3_membership_status_create($params) {
-
 
   civicrm_api3_verify_one_mandatory($params, 'CRM_Member_DAO_MembershipStatus', array('name', 'label'));
   //move before verifiy? DAO check requires?
@@ -184,12 +185,20 @@ SELECT start_date, end_date, join_date
   FROM civicrm_membership
  WHERE id = %1
 ";
+
   $params = array(1 => array($membershipID, 'Integer'));
   $dao = &CRM_Core_DAO::executeQuery($query, $params);
   if ($dao->fetch()) {
     require_once 'CRM/Member/BAO/MembershipStatus.php';
-    $result = &CRM_Member_BAO_MembershipStatus::getMembershipStatusByDate($dao->start_date, $dao->end_date, $dao->join_date);
 
+    // Take the is_admin column in MembershipStatus into consideration when requested
+    if (! CRM_Utils_Array::value('ignore_admin_only', $membershipParams) ) {
+      $result = &CRM_Member_BAO_MembershipStatus::getMembershipStatusByDate($dao->start_date, $dao->end_date, $dao->join_date, 'today', TRUE);
+    } 
+    else {
+      $result = &CRM_Member_BAO_MembershipStatus::getMembershipStatusByDate($dao->start_date, $dao->end_date, $dao->join_date);
+    }
+    
     //make is error zero only when valid status found.
     if (CRM_Utils_Array::value('id', $result)) {
       $result['is_error'] = 0;

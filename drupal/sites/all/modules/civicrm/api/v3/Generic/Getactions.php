@@ -1,4 +1,6 @@
 <?php
+// $Id$
+
 function civicrm_api3_generic_getActions($params) {
   civicrm_api3_verify_mandatory($params, NULL, array('entity'));
   $r = civicrm_api('Entity', 'Get', array('version' => 3));
@@ -6,12 +8,7 @@ function civicrm_api3_generic_getActions($params) {
   if (!in_array($entity, $r['values'])) {
     return civicrm_api3_create_error("Entity " . $entity . " invalid. Use api.entity.get to have the list", array('entity' => $r['values']));
   }
-  $apiRequest = array();
-  $apiRequest['entity'] = $entity;
-  $apiRequest['action'] = 'pretty sure it will never exist. Trick to force resolve to scan everywhere';
-  $apiRequest['version'] = 3;
-  // look up function, file, is_generic
-  $apiRequest = _civicrm_api_resolve($apiRequest);
+  _civicrm_api_loadEntity($entity);
 
   $functions     = get_defined_functions();
   $actions       = array();
@@ -26,6 +23,4 @@ function civicrm_api3_generic_getActions($params) {
     }
   }
   return civicrm_api3_create_success($actions);
-  //function _civicrm_api_resolve($apiRequest) {}
 }
-

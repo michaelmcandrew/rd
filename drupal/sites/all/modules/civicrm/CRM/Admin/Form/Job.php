@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id: $
  *
  */
-
-require_once 'CRM/Admin/Form.php';
 
 /**
  *
@@ -113,17 +111,19 @@ class CRM_Admin_Form_Job extends CRM_Admin_Form {
     $this->addFormRule(array('CRM_Admin_Form_Job', 'formRule'));
   }
 
-  static
-  function formRule($fields) {
+  static function formRule($fields) {
 
     $errors = array();
 
     require_once 'api/api.php';
 
-    civicrm_api_include($fields['api_entity']);
-    $fname = civicrm_api_get_function_name($fields['api_entity'], $fields['api_action']);
+    $apiRequest = array();
+    $apiRequest['entity'] = CRM_Utils_String::munge($fields['api_entity']);
+    $apiRequest['action'] = CRM_Utils_String::munge($fields['api_action']);
+    $apiRequest['version'] = substr($fields['api_prefix'], -1); // ie. civicrm_api3
+    $apiRequest += _civicrm_api_resolve($apiRequest);    // look up function, file, is_generic
 
-    if (!function_exists($fname)) {
+    if( !$apiRequest['function'] ) {
       $errors['api_action'] = ts('Given API command is not defined.');
     }
 
@@ -131,7 +131,8 @@ class CRM_Admin_Form_Job extends CRM_Admin_Form {
     if (($fields['api_action'] == 'process_membership_reminder_date' || $fields['api_action'] == 'update_greeting') &&
       CRM_Utils_Array::value('is_active', $fields) == 1
     ) {
-      $docLink = CRM_Utils_System::docURL2("Managing Scheduled Jobs");
+      // pass "wiki" as 6th param to docURL2 if you are linking to a page in wiki.civicrm.org
+      $docLink = CRM_Utils_System::docURL2("Managing Scheduled Jobs", NULL, NULL, NULL, NULL, "wiki");
       $errors['is_active'] = ts('You can not save this Scheduled Job as Active with the specified api action (%2). That action should not be run regularly - it should only be run manually for special conditions. %1', array(1 => $docLink, 2 => $fields['api_action']));
     }
 
@@ -159,6 +160,13 @@ class CRM_Admin_Form_Job extends CRM_Admin_Form {
     }
 
     CRM_Core_DAO::storeValues($dao, $defaults);
+
+    // CRM-10708
+    // job entity thats shipped with core is all lower case.
+    // this makes sure camel casing is followed for proper working of default population.
+    if (CRM_Utils_Array::value('api_entity', $defaults)) {
+      $defaults['api_entity'] = ucfirst($defaults['api_entity']);
+    }
 
     return $defaults;
   }

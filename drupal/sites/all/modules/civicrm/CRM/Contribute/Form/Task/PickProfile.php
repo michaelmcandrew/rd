@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,13 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Profile/Form.php';
-require_once 'CRM/Contribute/Form/Task.php';
 
 /**
  * This class provides the functionality for batch profile update for contribution
@@ -74,7 +71,7 @@ class CRM_Contribute_Form_Task_PickProfile extends CRM_Contribute_Form_Task {
     $session = CRM_Core_Session::singleton();
     $this->_userContext = $session->readUserContext();
 
-    CRM_Utils_System::setTitle(ts('Batch Profile Update for Contribution'));
+    CRM_Utils_System::setTitle(ts('Batch Update Contributions via Profile'));
 
     $validate = FALSE;
     //validations
@@ -98,12 +95,11 @@ class CRM_Contribute_Form_Task_PickProfile extends CRM_Contribute_Form_Task {
    */
   function buildQuickForm() {
 
-    require_once "CRM/Core/BAO/UFGroup.php";
     $types = array('Contribution');
     $profiles = CRM_Core_BAO_UFGroup::getProfiles($types, TRUE);
 
     if (empty($profiles)) {
-      CRM_Core_Session::setStatus("You will need to create a Profile containing the {$types[0]} fields you want to edit before you can use Batch Update via Profile. Navigate to Administer Civicrm >> CiviCRM Profile to configure a Profile. Consult the online Administrator documentation for more information.");
+      CRM_Core_Session::setStatus("You will need to create a Profile containing the {$types[0]} fields you want to edit before you can use Batch Update via Profile. Navigate to Administer CiviCRM >> CiviCRM Profile to configure a Profile. Consult the online Administrator documentation for more information.");
       CRM_Utils_System::redirect($this->_userContext);
     }
 

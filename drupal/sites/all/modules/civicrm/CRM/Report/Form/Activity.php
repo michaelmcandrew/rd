@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +30,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Report/Form.php';
 class CRM_Report_Form_Activity extends CRM_Report_Form {
 
   protected $_customGroupExtends = array(
@@ -41,8 +41,6 @@ class CRM_Report_Form_Activity extends CRM_Report_Form {
     $config = CRM_Core_Config::singleton();
     $campaignEnabled = in_array("CiviCampaign", $config->enableComponents);
     if ($campaignEnabled) {
-      require_once 'CRM/Campaign/BAO/Campaign.php';
-      require_once 'CRM/Campaign/PseudoConstant.php';
       $getCampaigns = CRM_Campaign_BAO_Campaign::getPermissionedCampaigns(NULL, NULL, TRUE, FALSE, TRUE);
       $this->activeCampaigns = $getCampaigns['campaigns'];
       asort($this->activeCampaigns);
@@ -321,8 +319,9 @@ class CRM_Report_Form_Activity extends CRM_Report_Form {
             CRM_Utils_Array::value($fieldName, $this->_params['fields'])
           ) {
 
-            if (!CRM_Utils_Array::value('activity_type_id', $this->_params['group_bys']) &&
-              (in_array($fieldName, array(
+            if (isset($this->_params['group_bys']) && 
+                !CRM_Utils_Array::value('activity_type_id', $this->_params['group_bys']) &&
+                (in_array($fieldName, array(
                 'contact_assignee', 'assignee_contact_id')) ||
                 in_array($fieldName, array('contact_target', 'target_contact_id'))
               )
@@ -462,12 +461,10 @@ class CRM_Report_Form_Activity extends CRM_Report_Form {
     $this->_groupBy = "GROUP BY {$this->_aliases['civicrm_activity']}.id";
   }
 
-  function buildACLClause($tableAlias) {
+  function buildACLClause($tableAlias = 'contact_a') {
     //override for ACL( Since Cotact may be source
     //contact/assignee or target also it may be null )
 
-    require_once 'CRM/Core/Permission.php';
-    require_once 'CRM/Contact/BAO/Contact/Permission.php';
     if (CRM_Core_Permission::check('view all contacts')) {
       $this->_aclFrom = $this->_aclWhere = NULL;
       return;
@@ -505,9 +502,7 @@ class CRM_Report_Form_Activity extends CRM_Report_Form {
     $viewLinks      = FALSE;
     $seperator      = CRM_CORE_DAO::VALUE_SEPARATOR;
     $context        = CRM_Utils_Request::retrieve('context', 'String', $this, FALSE, 'report');
-    require_once 'CRM/Activity/Selector/Activity.php';
 
-    require_once 'CRM/Core/Permission.php';
     if (CRM_Core_Permission::check('access CiviCRM')) {
       $viewLinks  = TRUE;
       $onHover    = ts('View Contact Summary for this Contact');
@@ -537,7 +532,8 @@ class CRM_Report_Form_Activity extends CRM_Report_Form {
           if ($viewLinks) {
             foreach ($assigneeContactIds as $id => $value) {
               $url = CRM_Utils_System::url("civicrm/contact/view",
-                'reset=1&cid=' . $value
+                'reset=1&cid=' . $value,
+                $this->_absoluteUrl
               );
               $link[] = "<a title='" . $onHover . "' href='" . $url . "'>{$assigneeNames[$id]}</a>";
             }
@@ -555,7 +551,8 @@ class CRM_Report_Form_Activity extends CRM_Report_Form {
           if ($viewLinks) {
             foreach ($targetContactIds as $id => $value) {
               $url = CRM_Utils_System::url("civicrm/contact/view",
-                'reset=1&cid=' . $value
+                'reset=1&cid=' . $value,
+                $this->_absoluteUrl
               );
               $link[] = "<a title='" . $onHover . "' href='" . $url . "'>{$targetNames[$id]}</a>";
             }
@@ -617,6 +614,15 @@ class CRM_Report_Form_Activity extends CRM_Report_Form {
       if (array_key_exists('civicrm_activity_engagement_level', $row)) {
         if ($value = $row['civicrm_activity_engagement_level']) {
           $rows[$rowNum]['civicrm_activity_engagement_level'] = $this->engagementLevels[$value];
+          $entryFound = TRUE;
+        }
+      }
+
+      if (array_key_exists('civicrm_activity_activity_date_time', $row)) {
+        if (CRM_Utils_Date::overdue($rows[$rowNum]['civicrm_activity_activity_date_time']) &&
+          $activityStatus[$row['civicrm_activity_status_id']] != 'Completed'
+        ) {
+          $rows[$rowNum]['class'] = "status-overdue";
           $entryFound = TRUE;
         }
       }

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -57,8 +57,7 @@ class CRM_Utils_Money {
    *
    * @static
    */
-  static
-  function format($amount, $currency = NULL, $format = NULL, $onlyNumber = FALSE) {
+  static function format($amount, $currency = NULL, $format = NULL, $onlyNumber = FALSE) {
 
     if (CRM_Utils_System::isNull($amount)) {
       return '';
@@ -70,17 +69,15 @@ class CRM_Utils_Money {
       $format = $config->moneyformat;
     }
 
-    // money_format() exists only in certain PHP install (CRM-650)
-    if (is_numeric($amount) and function_exists('money_format')) {
-      $amount = money_format($config->moneyvalueformat, $amount);
-    }
-
     if ($onlyNumber) {
+      // money_format() exists only in certain PHP install (CRM-650)
+      if (is_numeric($amount) and function_exists('money_format')) {
+        $amount = money_format($config->moneyvalueformat, $amount);
+      }
       return $amount;
     }
 
     if (!self::$_currencySymbols) {
-      require_once "CRM/Core/PseudoConstant.php";
       $currencySymbolName = CRM_Core_PseudoConstant::currencySymbols('name');
       $currencySymbol = CRM_Core_PseudoConstant::currencySymbols();
 
@@ -95,12 +92,13 @@ class CRM_Utils_Money {
       $format = $config->moneyformat;
     }
 
-    setlocale(LC_MONETARY, 'en_US.utf8', 'en_US', 'en_US.utf8', 'en_US', 'C');
     // money_format() exists only in certain PHP install (CRM-650)
-    if (is_numeric($amount) &&
-      function_exists('money_format')
-    ) {
+    // setlocale() affects native gettext (CRM-11054, CRM-9976)
+    if (is_numeric($amount) && function_exists('money_format')) {
+      $lc = setlocale(LC_MONETARY, 0);
+      setlocale(LC_MONETARY, 'en_US.utf8', 'en_US', 'en_US.utf8', 'en_US', 'C');
       $amount = money_format($config->moneyvalueformat, $amount);
+      setlocale(LC_MONETARY, $lc);
     }
 
     $rep = array(

@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -58,8 +58,13 @@ function civicrm_requirements($phase) {
     $phase == 'install'
   ) {
     $problems[] = array(
-      'title' => t('CiviCRM settings does not extist'),
-      'description' => t('CiviCRM settings file does not extist. It should be created by CiviCRM <a href="!link">install</a>', array('!link' => substr(dirname(dirname(__FILE__)), strlen(getcwd())) . '/install/index.php')),
+      'title' => t('CiviCRM settings does not exist'),
+      'description' =>
+      t('CiviCRM settings file does not exist. It should be created by CiviCRM <a href="!link">install</a>',
+        array('!link' => substr(dirname(dirname(__FILE__)),
+            strlen(getcwd())
+          ) . '/install/index.php')
+      ),
       'severity' => REQUIREMENT_ERROR,
     );
   }

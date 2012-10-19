@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,14 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/PCP/BAO/PCP.php';
-require_once 'CRM/Event/Form/ManageEvent.php';
-require_once 'CRM/Contribute/PseudoConstant.php';
 
 /**
  * This class generates form components for PCP
@@ -66,10 +62,11 @@ class CRM_PCP_Form_Event extends CRM_Event_Form_ManageEvent {
   public function setDefaultValues() {
     $defaults = array();
 
-    $title = CRM_Core_DAO::getFieldValue('CRM_Event_DAO_Event', $this->_id, 'title');
-    CRM_Utils_System::setTitle(ts('Personal Campaign Page Settings (%1)', array(1 => $title)));
     $defaults = array();
     if (isset($this->_id)) {
+      $title = CRM_Core_DAO::getFieldValue('CRM_Event_DAO_Event', $this->_id, 'title');
+      CRM_Utils_System::setTitle(ts('Personal Campaign Page Settings (%1)', array(1 => $title)));
+
       $params = array('entity_id' => $this->_id, 'entity_table' => 'civicrm_event');
       CRM_Core_DAO::commonRetrieve('CRM_PCP_DAO_PCPBlock', $params, $defaults);
       $defaults['pcp_active'] = CRM_Utils_Array::value('is_active', $defaults);
@@ -84,7 +81,8 @@ class CRM_PCP_Form_Event extends CRM_Event_Form_ManageEvent {
       $defaults['tellfriend_limit'] = 5;
       $defaults['link_text'] = ts('Promote this event with a personal campaign page');
 
-      if ($ccReceipt = CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_ContributionPage', $this->_id, 'cc_receipt')) {
+      if ($this->_id && 
+          $ccReceipt = CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_ContributionPage', $this->_id, 'cc_receipt')) {
         $defaults['notify_email'] = $ccReceipt;
       }
     }
@@ -154,7 +152,6 @@ class CRM_PCP_Form_Event extends CRM_Event_Form_ManageEvent {
         $errors['supporter_profile_id'] = ts('Supporter profile is a required field.');
       }
       else {
-        require_once 'CRM/PCP/BAO/PCP.php';
         if (CRM_PCP_BAO_PCP::checkEmailProfile($params['supporter_profile_id'])) {
           $errors['supporter_profile_id'] = ts('Profile is not configured with Email address.');
         }
@@ -205,7 +202,6 @@ class CRM_PCP_Form_Event extends CRM_Event_Form_ManageEvent {
     $params['is_approval_needed'] = CRM_Utils_Array::value('is_approval_needed', $params, FALSE);
     $params['is_tellfriend_enabled'] = CRM_Utils_Array::value('is_tellfriend_enabled', $params, FALSE);
 
-    require_once 'CRM/PCP/BAO/PCP.php';
     $dao = CRM_PCP_BAO_PCP::add($params);
 
     parent::endPostProcess();

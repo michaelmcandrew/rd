@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Setting.php';
 
 /**
  * BAO object for civicrm_setting table. This table is used to store civicrm settings that are not used
@@ -60,7 +58,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     NAVIGATION_NAME = 'Navigation Menu',
     SYSTEM_PREFERENCES_NAME = 'CiviCRM Preferences',
     URL_PREFERENCES_NAME = 'URL Preferences';
-
   static $_cache = NULL;
 
   /**
@@ -76,8 +73,7 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
    * @static
    * @access public
    */
-  static
-  function inCache($group,
+  static function inCache($group,
     $name,
     $componentID = NULL,
     $contactID   = NULL,
@@ -92,7 +88,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
       !isset(self::$_cache[$cacheKey])
     ) {
       // check in civi cache if present (typically memcache)
-      require_once 'CRM/Utils/Cache.php';
       $globalCache = CRM_Utils_Cache::singleton();
       $result = $globalCache->get($cacheKey);
       if ($result) {
@@ -103,8 +98,7 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     return isset(self::$_cache[$cacheKey]) ? $cacheKey : NULL;
   }
 
-  static
-  function setCache($values,
+  static function setCache($values,
     $group,
     $componentID = NULL,
     $contactID = NULL
@@ -117,15 +111,13 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
 
     self::$_cache[$cacheKey] = $values;
 
-    require_once 'CRM/Utils/Cache.php';
     $globalCache = CRM_Utils_Cache::singleton();
     $result = $globalCache->set($cacheKey, $values);
 
     return $cacheKey;
   }
 
-  static
-  function dao($group,
+  static function dao($group,
     $name        = NULL,
     $componentID = NULL,
     $contactID   = NULL
@@ -162,20 +154,15 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
    * @static
    * @access public
    */
-  static
-  function getItem($group,
+  static function getItem($group,
     $name         = NULL,
     $componentID  = NULL,
     $defaultValue = NULL,
     $contactID    = NULL
   ) {
 
-    // if both group and name are defined, check if over-ridden by the admin
-    if ($group &&
-      $name &&
-      defined("{$group}.{$name}")
-    ) {
-      return constant("{$group}.{$name}");
+    if (NULL !== ($override = self::getOverride($group, $name, NULL))) {
+      return $override;
     }
 
     $cacheKey = self::inCache($group, $name, $componentID, $contactID, TRUE);
@@ -185,7 +172,10 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
 
       $values = array();
       while ($dao->fetch()) {
-        if ($dao->value) {
+        if (NULL !== ($override = self::getOverride($group, $dao->name, NULL))) {
+          $values[$dao->name] = $override;
+        }
+        elseif ($dao->value) {
           $values[$dao->name] = unserialize($dao->value);
         }
         else {
@@ -213,8 +203,7 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
    * @static
    * @access public
    */
-  static
-  function setItem($value,
+  static function setItem($value,
     $group,
     $name,
     $componentID = NULL,
@@ -225,11 +214,11 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     $dao = self::dao($group, $name, $componentID, $contactID);
     $dao->find(TRUE);
 
-    if ($value) {
-      $dao->value = serialize($value);
+    if (CRM_Utils_System::isNull($value)) {
+      $dao->value = 'null';
     }
     else {
-      $dao->value = 'null';
+      $dao->value = serialize($value);
     }
 
     $dao->created_date = date('Ymdhis');
@@ -275,8 +264,7 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
    * @static
    * @access public
    */
-  static
-  function deleteItem($group, $name = NULL, $componentID = NULL, $contactID = NULL) {
+  static function deleteItem($group, $name = NULL, $componentID = NULL, $contactID = NULL) {
     $dao = self::dao($group, $name, $componentID, $contactID);
     $dao->delete();
 
@@ -294,8 +282,7 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     }
   }
 
-  static
-  function valueOptions($group,
+  static function valueOptions($group,
     $name,
     $system              = TRUE,
     $userID              = NULL,
@@ -306,7 +293,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
   ) {
     $optionValue = self::getItem($group, $name);
 
-    require_once 'CRM/Core/OptionGroup.php';
     $groupValues = CRM_Core_OptionGroup::values($name, FALSE, FALSE, $localize, $condition, $returnField);
 
     //enabled name => label require for new contact edit form, CRM-4605
@@ -328,7 +314,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     }
 
     if ($optionValue && !empty($groupValues)) {
-      require_once 'CRM/Core/BAO/CustomOption.php';
       $dbValues = explode(CRM_Core_DAO::VALUE_SEPARATOR,
         substr($optionValue, 1, -1)
       );
@@ -348,8 +333,7 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     return ($returnNameANDLabels) ? $nameAndLabels : $returnValues;
   }
 
-  static
-  function setValueOption($group,
+  static function setValueOption($group,
     $name,
     $value,
     $system   = TRUE,
@@ -360,7 +344,6 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
       $optionValue = NULL;
     }
     elseif (is_array($value)) {
-      require_once 'CRM/Core/OptionGroup.php';
       $groupValues = CRM_Core_OptionGroup::values($name, FALSE, FALSE, FALSE, NULL, $keyField);
 
       $cbValues = array();
@@ -389,8 +372,7 @@ class CRM_Core_BAO_Setting extends CRM_Core_DAO_Setting {
     );
   }
 
-  static
-  function fixAndStoreDirAndURL(&$params) {
+  static function fixAndStoreDirAndURL(&$params) {
     $sql = "
 SELECT name, group_name
 FROM   civicrm_setting
@@ -451,9 +433,7 @@ OR       group_name = %2 )
     }
   }
 
-  static
-  function storeDirectoryOrURLPreferences(&$params, $group) {
-    require_once 'CRM/Utils/File.php';
+  static function storeDirectoryOrURLPreferences(&$params, $group) {
     foreach ($params as $name => $value) {
       // always try to store relative directory or url from CMS root
       $value = ($group == self::DIRECTORY_PREFERENCES_NAME) ? CRM_Utils_File::relativeDirectory($value) : CRM_Utils_System::relativeURL($value);
@@ -465,20 +445,29 @@ OR       group_name = %2 )
     }
   }
 
-  static
-  function retrieveDirectoryAndURLPreferences(&$params, $setInConfig = FALSE) {
+  static function retrieveDirectoryAndURLPreferences(&$params, $setInConfig = FALSE) {
     if ($setInConfig) {
       $config = CRM_Core_Config::singleton();
     }
 
+    $isJoomla = (defined('CIVICRM_UF') && CIVICRM_UF == 'Joomla') ? TRUE : FALSE;
+
+    if (CRM_Core_Config::isUpgradeMode() && !$isJoomla) {
+      $currentVer = CRM_Core_BAO_Domain::version();
+      if (version_compare($currentVer, '4.1.alpha1') < 0) {
+        return;
+      }
+    }
     $sql = "
 SELECT name, group_name, value
 FROM   civicrm_setting
 WHERE  ( group_name = %1
 OR       group_name = %2 )
+AND domain_id = %3
 ";
     $sqlParams = array(1 => array(self::DIRECTORY_PREFERENCES_NAME, 'String'),
       2 => array(self::URL_PREFERENCES_NAME, 'String'),
+      3 => array(CRM_Core_Config::domainID(), 'Integer'),
     );
 
     $dao = CRM_Core_DAO::executeQuery($sql,
@@ -494,6 +483,10 @@ OR       group_name = %2 )
     if (is_a($dao, 'DB_Error')) {
       if (CRM_Core_Config::isUpgradeMode()) {
         // seems like this is a 4.0 -> 4.1 upgrade, so we suppress this error and continue
+        // hack to set the resource base url so that js/ css etc is loaded correctly
+        if ($isJoomla) {
+          $params['userFrameworkResourceURL'] = CRM_Utils_File::addTrailingSlash(CIVICRM_UF_BASEURL, '/') . str_replace('administrator', '', CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionValue', 'userFrameworkResourceURL', 'value', 'name'));
+        }
         return;
       }
       else {
@@ -502,15 +495,9 @@ OR       group_name = %2 )
       }
     }
 
-
-    require_once 'CRM/Utils/File.php';
     while ($dao->fetch()) {
-      $value = NULL;
-      // overwrite value from settings file
-      if (defined("{$dao->group_name}.{$dao->name}")) {
-        $value = constant("{$dao->group_name}.{$dao->name}");
-      }
-      elseif ($dao->value) {
+      $value = self::getOverride($dao->group_name, $dao->name, NULL);
+      if ($value === NULL && $dao->value) {
         $value = unserialize($dao->value);
         if ($dao->group_name == self::DIRECTORY_PREFERENCES_NAME) {
           $value = CRM_Utils_File::absoluteDirectory($value);
@@ -520,11 +507,30 @@ OR       group_name = %2 )
           $value = CRM_Utils_System::absoluteURL($value, TRUE);
         }
       }
+      // CRM-10931, If DB doesn't have any value, carry on with any default value thats already available 
+      if (!isset($value) && CRM_Utils_Array::value($dao->name, $params)) {
+        $value = $params[$dao->name];
+      }
       $params[$dao->name] = $value;
 
       if ($setInConfig) {
         $config->{$dao->name} = $value;
       }
+    }
+  }
+
+  /**
+   * Determine what, if any, overrides have been provided
+   * for a setting.
+   *
+   * @return mixed, NULL or an overriden value
+   */
+  protected static function getOverride($group, $name, $default) {
+    global $civicrm_setting;
+    if ($group && $name && isset($civicrm_setting[$group][$name])) {
+      return $civicrm_setting[$group][$name];
+    } else {
+      return $default;
     }
   }
 }

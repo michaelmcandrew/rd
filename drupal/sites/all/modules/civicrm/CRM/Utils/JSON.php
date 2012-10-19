@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -48,8 +48,7 @@ class CRM_Utils_JSON {
    * @return string $jsonObject JSON array
    * @static
    */
-  static
-  function encode($params, $identifier = 'id') {
+  static function encode($params, $identifier = 'id') {
     $buildObject = array();
     foreach ($params as $value) {
       $name = addslashes($value['name']);
@@ -70,8 +69,7 @@ class CRM_Utils_JSON {
    *
    * @return json encode string
    */
-  static
-  function encodeSelector(&$params, $page, $total, $selectorElements) {
+  static function encodeSelector(&$params, $page, $total, $selectorElements) {
     $json = "";
     $json .= "{\n";
     $json .= "page: $page,\n";
@@ -104,8 +102,7 @@ class CRM_Utils_JSON {
     return $json;
   }
 
-  static
-  function encodeDataTableSelector($params, $sEcho, $iTotal, $iFilteredTotal, $selectorElements) {
+  static function encodeDataTableSelector($params, $sEcho, $iTotal, $iFilteredTotal, $selectorElements) {
     $sOutput = '{';
     $sOutput .= '"sEcho": ' . intval($sEcho) . ', ';
     $sOutput .= '"iTotalRecords": ' . $iTotal . ', ';
@@ -122,7 +119,8 @@ class CRM_Utils_JSON {
 
         //CRM-7130 --lets addslashes to only double quotes,
         //since we are using it to quote the field value.
-        $sOutput .= '"' . addcslashes($value[$element], '"\\') . '"';
+        //str_replace helps to provide a break for new-line
+        $sOutput .= '"' . addcslashes(str_replace(array("\r\n", "\n", "\r"), '<br />', $value[$element]), '"\\') . '"';
 
         $addcomma = TRUE;
       }

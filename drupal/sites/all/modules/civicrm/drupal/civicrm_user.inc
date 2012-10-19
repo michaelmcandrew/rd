@@ -24,7 +24,7 @@
  * Drupal module include file.
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -177,19 +177,28 @@ function civicrm_user_view($user, $view_mode) {
     require_once 'CRM/Contact/BAO/Contact.php';
     require_once 'CRM/Contact/BAO/Contact/Permission.php';
     $contactURL = NULL;
-    if (CRM_Core_Permission::check('access CiviCRM') &&
-      CRM_Contact_BAO_Contact_Permission::allow($userID)
-    ) {
-      $url = CRM_Utils_System::url('civicrm/contact/view', "reset=1&cid=$userID");
-      $contactURL = '<a href="' . $url . '">&raquo; ' . ts("View Contact Record") . '</a>';
+    $civiPerm = CRM_Contact_BAO_Contact_Permission::allow($userID);
+    if (CRM_Core_Permission::check('access CiviCRM') && $civiPerm) {
+      $contactURL =
+	'<span class="user-page-link" id="user-page-contact" ><span class="user-page-bullet">&raquo;</span> ' .
+	l(ts("View Contact Record"),
+	  'civicrm/contact/view',
+	  array('query' => array('reset' => 1, 'cid' => $userID ))
+	  ) .
+	'</span>';
     }
 
-    if (CRM_Core_Permission::check('access Contact Dashboard')) {
-      $url = CRM_Utils_System::url('civicrm/user', "reset=1&id=$userID");
+    if (CRM_Core_Permission::check('access Contact Dashboard') && $civiPerm) {
       if (!empty($contactURL)) {
         $contactURL .= '<br/>';
       }
-      $contactURL .= '<a href="' . $url . '">&raquo; ' . ts("View Contact Dashboard") . '</a>';
+      $contactURL .=
+	'<span class="user-page-link" id="user-page-dashboard" ><span class="user-page-bullet">&raquo;</span> ' .
+	l(ts("View Contact Dashboard"),
+	  'civicrm/user',
+	  array('query' => array('reset' => 1, 'id' => $userID ))
+	  ) .
+	'</span>';
     }
 
     require_once 'CRM/Profile/Page/Dynamic.php';
@@ -215,9 +224,9 @@ function civicrm_user_view($user, $view_mode) {
       // CRM-3537: profile edit link
       $editURL = '';
       if (user_edit_access($user)) {
-        $editURL = '&raquo; ' . l(ts("Edit %1", array('%1' => $title['title'])),
+        $editURL = '<span class="user-page-link" id="user-page-profile-' . substr($title['title'], 0, 3) . '" ><span class="user-page-bullet">&raquo;</span> ' . l(ts("Edit %1", array(1 => $title['title'])),
           "user/{$user->uid}/edit/{$title['title']}"
-        );
+        ) . '</span>';
       }
 
       if ($pageContent) {

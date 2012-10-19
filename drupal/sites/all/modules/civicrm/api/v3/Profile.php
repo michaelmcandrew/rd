@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
   +--------------------------------------------------------------------+
-  | CiviCRM version 4.1                                                |
+  | CiviCRM version 4.2                                                |
   +--------------------------------------------------------------------+
-  | Copyright CiviCRM LLC (c) 2004-2011                                |
+  | Copyright CiviCRM LLC (c) 2004-2012                                |
   +--------------------------------------------------------------------+
   | This file is a part of CiviCRM.                                    |
   |                                                                    |
@@ -30,7 +32,7 @@
  *
  * @package CiviCRM_APIv3
  * @subpackage API_ActivityProfile
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: ActivityProfile.php 30486 2011-05-20 16:12:09Z rajan $
  *
  */
@@ -135,7 +137,7 @@ function civicrm_api3_profile_get($params) {
  */
 function civicrm_api3_profile_set($params) {
 
-  civicrm_api3_verify_mandatory($params, NULL, array('profile_id', 'contact_id'));
+  civicrm_api3_verify_mandatory($params, NULL, array('profile_id'));
 
   if (!CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFGroup', $params['profile_id'], 'is_active')) {
     return civicrm_api3_create_error('Invalid value for profile_id');
@@ -203,7 +205,7 @@ function civicrm_api3_profile_set($params) {
   }
 
   $contactParams['version'] = 3;
-  $contactParams['contact_id'] = $params['contact_id'];
+  $contactParams['contact_id'] = CRM_Utils_Array::value('contact_id', $params);
   $contactParams['profile_id'] = $params['profile_id'];
   $contactParams['skip_custom'] = 1;
 
@@ -281,7 +283,7 @@ function civicrm_api3_profile_set($params) {
  */
 function civicrm_api3_profile_apply($params) {
 
-  civicrm_api3_verify_mandatory($params, NULL, array('profile_id', 'contact_id'));
+  civicrm_api3_verify_mandatory($params, NULL, array('profile_id'));
   require_once 'CRM/Contact/BAO/Contact.php';
 
   if (!CRM_Core_DAO::getFieldValue('CRM_Core_DAO_UFGroup', $params['profile_id'], 'is_active')) {
@@ -302,7 +304,7 @@ function civicrm_api3_profile_apply($params) {
 
   list($data, $contactDetails) = CRM_Contact_BAO_Contact::formatProfileContactParams($params,
     $profileFields,
-    $params['contact_id'],
+    CRM_Utils_Array::value('contact_id', $params),
     $params['profile_id'],
     CRM_Utils_Array::value('contact_type', $params),
     CRM_Utils_Array::value('skip_custom', $params, FALSE)

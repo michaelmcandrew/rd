@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Admin/Form/Setting.php';
 
 /**
  * This class generates form components for Site Url
@@ -53,15 +51,16 @@ class CRM_Admin_Form_Setting_Url extends CRM_Admin_Form_Setting {
     $this->addElement('text', 'userFrameworkResourceURL', ts('CiviCRM Resource URL'));
     $this->addElement('text', 'imageUploadURL', ts('Image Upload URL'));
     $this->addElement('text', 'customCSSURL', ts('Custom CiviCRM CSS URL'));
+    $this->addElement('text', 'extensionsURL', ts('Extension Resource URL'));
     $this->addYesNo('enableSSL', ts('Force Secure URLs (SSL)'));
+    $this->addYesNo('verifySSL', ts('Verify SSL Certs'));
 
     $this->addFormRule(array('CRM_Admin_Form_Setting_Url', 'formRule'));
 
     parent::buildQuickForm();
   }
 
-  static
-  function formRule($fields) {
+  static function formRule($fields) {
     if (isset($fields['enableSSL']) &&
       $fields['enableSSL']
     ) {
@@ -83,6 +82,13 @@ class CRM_Admin_Form_Setting_Url extends CRM_Admin_Form_Setting {
   }
 
   public function postProcess() {
+    // if extensions url is set, lets clear session status messages to avoid
+    // a potentially spurious message which might already have been set. This
+    // is a bit hackish
+    // CRM-10629
+    $session = CRM_Core_Session::singleton( );
+    $session->getStatus(TRUE);
+
     parent::postProcess();
 
     parent::rebuildMenu();

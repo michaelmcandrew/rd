@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Core/DAO/Tag.php';
 class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
 
   /**
@@ -57,8 +55,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function retrieve(&$params, &$defaults) {
+  static function retrieve(&$params, &$defaults) {
     $tag = new CRM_Core_DAO_Tag();
     $tag->copyValues($params);
     if ($tag->find(TRUE)) {
@@ -185,22 +182,26 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
     return $tags;
   }
 
-  static
-  function getTags($usedFor = 'civicrm_contact',
+  static function getTags($usedFor = 'civicrm_contact',
     &$tags = array(),
     $parentId  = NULL,
-    $separator = '&nbsp;&nbsp;',
-    $flatlist  = TRUE
+    $separator = '&nbsp;&nbsp;'
   ) {
     // We need to build a list of tags ordered by hierarchy and sorted by
     // name. The heirarchy will be communicated by an accumulation of
-    // '&nbsp;&nbsp;' in front of the name to give it a visual offset.
+    // separators in front of the name to give it a visual offset.
     // Instead of recursively making mysql queries, we'll make one big
     // query and build the heirarchy with the algorithm below.
+    $args = array(1 => array('%' . $usedFor . '%', 'String'));
     $query = "SELECT id, name, parent_id, is_tagset
                   FROM civicrm_tag 
-                  WHERE used_for LIKE '%{$usedFor}%' ORDER BY name";
-    $dao = CRM_Core_DAO::executeQuery($query, CRM_Core_DAO::$_nullArray, TRUE, NULL, FALSE, FALSE);
+              WHERE used_for LIKE %1";
+    if ($parentId) {
+      $query .= " AND parent_id = %2";
+      $args[2] = array($parentId, 'Integer');
+    }
+    $query .= " ORDER BY name";
+    $dao = CRM_Core_DAO::executeQuery($query, $args, TRUE, NULL, FALSE, FALSE);
 
     // Sort the tags into the correct storage by the parent_id/is_tagset
     // filter the filter was in place previously, we're just reusing it.
@@ -209,14 +210,14 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
     // are necessarily placed.
     $roots = $rows = array();
     while ($dao->fetch()) {
-      if (!$dao->parent_id && $dao->is_tagset == 0) {
+      if ($dao->parent_id == $parentId && $dao->is_tagset == 0) {
         $roots[] = array('id' => $dao->id, 'prefix' => '', 'name' => $dao->name);
       }
       else {
         $rows[] = array('id' => $dao->id, 'prefix' => '', 'name' => $dao->name, 'parent_id' => $dao->parent_id);
       }
     }
-
+    $dao->free();
     // While we have nodes left to build, shift the first (alphabetically)
     // node of the list, place it in our tags list and loop through the
     // list of unplaced nodes to find its children. We make a copy to
@@ -264,10 +265,8 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @static
    *
    */
-  static
-  function del($id) {
+  static function del($id) {
     // delete all crm_entity_tag records with the selected tag id
-    require_once 'CRM/Core/DAO/EntityTag.php';
     $entityTag = new CRM_Core_DAO_EntityTag();
     $entityTag->tag_id = $id;
     if ($entityTag->find()) {
@@ -280,12 +279,11 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
     $tag = new CRM_Core_DAO_Tag();
     $tag->id = $id;
 
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::pre('delete', 'Tag', $id, $tag);
 
     if ($tag->delete()) {
       CRM_Utils_Hook::post('delete', 'Tag', $id, $tag);
-      CRM_Core_Session::setStatus(ts('Selected Tag has been Deleted Successfuly.'));
+      CRM_Core_Session::setStatus(ts('Selected tag has been deleted successfully.'));
       return TRUE;
     }
     return FALSE;
@@ -305,8 +303,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function add(&$params, &$ids) {
+  static function add(&$params, &$ids) {
     if (!self::dataExists($params)) {
       return NULL;
     }
@@ -322,7 +319,6 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
     $tag->copyValues($params);
     $tag->id = CRM_Utils_Array::value('tag', $ids);
 
-    require_once 'CRM/Utils/Hook.php';
     $edit = ($tag->id) ? TRUE : FALSE;
     if ($edit) {
       CRM_Utils_Hook::pre('edit', 'Tag', $tag->id, $tag);
@@ -368,8 +364,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function dataExists(&$params) {
+  static function dataExists(&$params) {
     if (!empty($params['name'])) {
       return TRUE;
     }
@@ -386,14 +381,15 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function getTagSet($entityTable) {
+  static function getTagSet($entityTable) {
     $tagSets = array();
-    $query   = "SELECT name FROM civicrm_tag WHERE is_tagset=1 AND parent_id IS NULL and used_for LIKE '%{$entityTable}%'";
-    $dao     = CRM_Core_DAO::executeQuery($query, CRM_Core_DAO::$_nullArray, TRUE, NULL, FALSE, FALSE);
+    $query = "SELECT name, id FROM civicrm_tag
+              WHERE is_tagset=1 AND parent_id IS NULL and used_for LIKE %1";
+    $dao = CRM_Core_DAO::executeQuery($query, array(1 => array('%' . $entityTable . '%', 'String')), TRUE, NULL, FALSE, FALSE);
     while ($dao->fetch()) {
-      $tagSets[] = $dao->name;
+      $tagSets[$dao->id] = $dao->name;
     }
+    $dao->free();
     return $tagSets;
   }
 
@@ -404,8 +400,7 @@ class CRM_Core_BAO_Tag extends CRM_Core_DAO_Tag {
    * @access public
    * @static
    */
-  static
-  function getTagsNotInTagset() {
+  static function getTagsNotInTagset() {
     $tags = $tagSets = array();
     // first get all the tag sets
     $query = "SELECT id FROM civicrm_tag WHERE is_tagset=1 AND parent_id IS NULL";

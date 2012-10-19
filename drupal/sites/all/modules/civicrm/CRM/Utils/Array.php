@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -47,8 +47,7 @@ class CRM_Utils_Array {
    * @access public
    *
    */
-  static
-  function value($key, &$list, $default = NULL) {
+  static function value($key, $list, $default = NULL) {
     if (is_array($list)) {
       return array_key_exists($key, $list) ? $list[$key] : $default;
     }
@@ -66,8 +65,7 @@ class CRM_Utils_Array {
    * @access public
    * @static
    */
-  static
-  function retrieveValueRecursive(&$params, $key) {
+  static function retrieveValueRecursive(&$params, $key) {
     if (!is_array($params)) {
       return NULL;
     }
@@ -99,8 +97,7 @@ class CRM_Utils_Array {
    * @access public
    *
    */
-  static
-  function key($value, &$list) {
+  static function key($value, &$list) {
     if (is_array($list)) {
       $key = array_search($value, $list);
 
@@ -113,8 +110,7 @@ class CRM_Utils_Array {
     return NULL;
   }
 
-  static
-  function &xml(&$list, $depth = 1, $seperator = "\n") {
+  static function &xml(&$list, $depth = 1, $seperator = "\n") {
     $xml = '';
     foreach ($list as $name => $value) {
       $xml .= str_repeat(' ', $depth * 4);
@@ -133,8 +129,7 @@ class CRM_Utils_Array {
     return $xml;
   }
 
-  static
-  function escapeXML($value) {
+  static function escapeXML($value) {
     static $src = NULL;
     static $dst = NULL;
 
@@ -146,8 +141,7 @@ class CRM_Utils_Array {
     return str_replace($src, $dst, $value);
   }
 
-  static
-  function flatten(&$list, &$flat, $prefix = '', $seperator = ".") {
+  static function flatten(&$list, &$flat, $prefix = '', $seperator = ".") {
     foreach ($list as $name => $value) {
       $newPrefix = ($prefix) ? $prefix . $seperator . $name : $name;
       if (is_array($value)) {
@@ -197,8 +191,7 @@ class CRM_Utils_Array {
    * @return  $a3
    * @static
    */
-  static
-  function crmArrayMerge($a1, $a2) {
+  static function crmArrayMerge($a1, $a2) {
     if (empty($a1)) {
       return $a2;
     }
@@ -230,8 +223,7 @@ class CRM_Utils_Array {
     return $a3;
   }
 
-  static
-  function isHierarchical(&$list) {
+  static function isHierarchical(&$list) {
     foreach ($list as $n => $v) {
       if (is_array($v)) {
         return TRUE;
@@ -252,8 +244,7 @@ class CRM_Utils_Array {
    * @static
    * @access public
    */
-  static
-  function array_deep_copy(&$array, $maxdepth = 50, $depth = 0) {
+  static function array_deep_copy(&$array, $maxdepth = 50, $depth = 0) {
     if ($depth > $maxdepth) {
       return $array;
     }
@@ -281,8 +272,7 @@ class CRM_Utils_Array {
    * @return  void
    * @static
    */
-  static
-  function crmArraySplice(&$params, $start, $end) {
+  static function crmArraySplice(&$params, $start, $end) {
     // verify start and end date
     if ($start < 0) {
       $start = 0;
@@ -311,8 +301,7 @@ class CRM_Utils_Array {
    *
    * @static
    */
-  static
-  function crmInArray($value, $params, $caseInsensitive = TRUE) {
+  static function crmInArray($value, $params, $caseInsensitive = TRUE) {
     foreach ($params as $item) {
       if (is_array($item)) {
         $ret = crmInArray($value, $item, $caseInsensitive);
@@ -335,8 +324,7 @@ class CRM_Utils_Array {
    * the api needs the name => value conversion, also the view layer typically
    * requires value => name conversion
    */
-  static
-  function lookupValue(&$defaults, $property, $lookup, $reverse) {
+  static function lookupValue(&$defaults, $property, $lookup, $reverse) {
     $id = $property . '_id';
 
     $src = $reverse ? $property : $id;
@@ -375,8 +363,7 @@ class CRM_Utils_Array {
    *  @return boolean true is array is empty else false
    *  @static
    */
-  static
-  function crmIsEmptyArray($array = array(
+  static function crmIsEmptyArray($array = array(
     )) {
     if (!is_array($array)) {
       return TRUE;
@@ -402,8 +389,7 @@ class CRM_Utils_Array {
    * @return integer $levels containing number of levels in array
    * @static
    */
-  static
-  function getLevelsArray($array) {
+  static function getLevelsArray($array) {
     if (!is_array($array)) {
       return 0;
     }
@@ -428,11 +414,66 @@ class CRM_Utils_Array {
    * @return array $array Sorted array
    * @static
    */
-  static
-  function crmArraySortByField($array, $field) {
+  static function crmArraySortByField($array, $field) {
     $code = "return strnatcmp(\$a['$field'], \$b['$field']);";
     uasort($array, create_function('$a,$b', $code));
     return $array;
   }
+
+  /**
+   * Recursively removes duplicate values from an multi-dimensional array.
+   *
+   * @param array $array The input array possibly containing duplicate values.
+   *
+   * @return array $array The array with duplicate values removed.
+   * @static
+   */
+  static function crmArrayUnique($array) {
+    $result = array_map("unserialize", array_unique(array_map("serialize", $array)));
+    foreach ($result as $key => $value) {
+      if (is_array($value)) {
+        $result[$key] = self::crmArrayUnique($value);
+      }
+    }
+    return $result;
+  }
+
+  /**
+   *  Sort an array and maintain index association, use Collate from the
+   *  PECL "intl" package, if available, for UTF-8 sorting (ex: list of countries).
+   *  On Debian/Ubuntu: apt-get install php5-intl
+   *
+   *  @param array $array array of values
+   *
+   *  @return  array  Sorted array
+   *  @static
+   */
+  static function asort($array = array(
+    )) {
+    $lcMessages = CRM_Utils_System::getUFLocale();
+
+    if ($lcMessages && $lcMessages != 'en_US' && class_exists('Collator')) {
+      $collator = new Collator($lcMessages . '.utf8');
+      $collator->asort($array);
+    }
+    else {
+      asort($array);
+    }
+
+    return $array;
+  }
+
+  static function urlEncode($values) {
+    $uri = '';
+    foreach ($values as $key => $value) {
+      $value = urlencode($value);
+      $uri .= "&{$key}={$value}";
+    }
+    if (!empty($uri)) {
+      $uri = substr($uri, 1);
+    }
+    return $uri;
+  }
+
 }
 

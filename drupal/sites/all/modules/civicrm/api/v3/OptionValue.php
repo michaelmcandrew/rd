@@ -1,4 +1,6 @@
 <?php
+// $Id$
+
 require_once 'CRM/Core/BAO/OptionValue.php';
 
 /**
@@ -52,23 +54,37 @@ function civicrm_api3_option_value_create($params) {
     /* CONVERT(value, DECIMAL) is used to convert varchar
        field 'value' to decimal->integer                    */
 
+
     $params['value'] = (int) CRM_Utils_Weight::getDefaultWeight('CRM_Core_DAO_OptionValue',
       $fieldValues,
       'CONVERT(value, DECIMAL)'
     );
     $weight = $params['value'];
   }
-  if (!array_key_exists('weight', $params)) {
+  if (!array_key_exists('weight', $params) && array_key_exists('value', $params)) {
     // no idea why that's a "mandatory" field
     $params['weight'] = $params['value'];
+  } elseif (array_key_exists('weight', $params) && $params['weight'] == 'next') {
+    // weight is numeric, so it's safe-ish to treat symbol 'next' as magical value
+    $params['weight'] = CRM_Utils_Weight::getDefaultWeight('CRM_Core_DAO_OptionValue',
+      array('option_group_id' => $params['option_group_id'])
+    );
   }
 
+  if (array_key_exists('component', $params)) {
+    if (empty($params['component'])) {
+      $params['component_id'] = '';
+    } else {
+      $params['component_id'] = array_search($params['component'], CRM_Core_PseudoConstant::component());
+    }
+    unset($params['component']);
+  }
 
   if (CRM_Utils_Array::value('id', $params)) {
     $ids = array('optionValue' => $params['id']);
   }
   $optionValueBAO = CRM_Core_BAO_OptionValue::add($params, $ids);
-
+  civicrm_api('option_value', 'getfields', array('version' => 3, 'cache_clear' => 1));
   $values = array();
   _civicrm_api3_object_to_array($optionValueBAO, $values[$optionValueBAO->id]);
   return civicrm_api3_create_success($values, $params);
@@ -82,6 +98,9 @@ function civicrm_api3_option_value_create($params) {
  */
 function _civicrm_api3_option_value_create_spec(&$params) {
   $params['is_active']['api.default'] = 1;
+  $params['component']['type'] = CRM_Utils_Type::T_STRING;
+  $params['component']['options'] = array_values(CRM_Core_PseudoConstant::component());
+  // $params['component_id']['pseudoconstant'] = 'component';
 }
 
 /**
@@ -96,8 +115,6 @@ function _civicrm_api3_option_value_create_spec(&$params) {
  * @access public
  */
 function civicrm_api3_option_value_delete($params) {
-  return CRM_Core_BAO_OptionValue::del((int) $params["id"]) ? civicrm_api3_create_success() : civicrm_api3_create_error('Could not delete OptionValue ' . $id);
+  return CRM_Core_BAO_OptionValue::del((int) $params['id']) ? civicrm_api3_create_success() : civicrm_api3_create_error('Could not delete OptionValue ' . $params['id']);
 }
-
-
 

@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -51,6 +51,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'title' => t('CiviCRM Recurring Contribution profile'),
     'help' => t("Recurring Contribution Profiles in CiviCRM."),
   );
+
   //this join makes Contribution data available in view based on recurring . A separate relationship is defined elsewhere to make recurring data available to view based on contributi
   $data['civicrm_contribution']['table']['join']['civicrm_contribution_recur'] = array(
     'left_field' => 'id',
@@ -63,6 +64,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'left_field' => 'contribution_id',
     'field' => 'id',
   );
+
   $data['civicrm_contribution']['table']['join']['civicrm_pledge'] = array(
     'left_table' => 'civicrm_pledge_payment',
     'left_field' => 'contribution_id',
@@ -96,7 +98,8 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'help' => 'Bring Contact Record the complete contact record to the party',
     'relationship' => array(
       'base' => 'civicrm_contact',
-      'field' => 'id',
+      'left_field' => 'id',
+      'field' => 'contact_id',
       'handler' => 'views_handler_relationship',
       'label' => t('CiviCRM Contact, with custom fields'),
     ),
@@ -204,7 +207,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'title' => t('Non Deductible Amount'),
     'help' => t('The Non Deductible Part of the Contribution'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(
@@ -224,7 +227,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'title' => t('Total Amount'),
     'help' => t('The Total Contribution made by the Contact'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(
@@ -243,7 +246,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'title' => t('Fee Amount'),
     'help' => t('The fee charged by the Payment Processor for the transaction.'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(
@@ -263,7 +266,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'title' => t('Net Amount'),
     'help' => t('The Full Contribution minus Payment Processor Fees.'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(
@@ -604,7 +607,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'title' => t('Amount'),
     'help' => t('The amount of the soft credit'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(
@@ -728,7 +731,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'title' => t('Amount'),
     'help' => t('The amount of the recurring contribution'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(
@@ -1107,7 +1110,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'title' => t('Amount'),
     'help' => t('The total amount of the pledge'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(
@@ -1280,9 +1283,9 @@ function _civicrm_contribute_data(&$data, $enabled) {
 
   // contribution page
   $data['civicrm_pcp']['contribution_page'] = array(
-    'title' => t('Contribution Page'),
-    'real field' => 'contribution_page_id',
-    'help' => t('The Contribution Page with which this Personal Campaign Page is associated.'),
+    'title' => t('Associated Contribution or Event Page'),
+    'real field' => 'page_id',
+    'help' => t('The Contribution or Event Page with which this Personal Campaign Page is associated.'),
     'field' => array(
       'handler' => 'civicrm_handler_field_pseudo_constant',
       'click sortable' => TRUE,
@@ -1347,7 +1350,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
     'title' => t('Goal Amount'),
     'help' => t('Goal Amount.'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(
@@ -1381,7 +1384,7 @@ function _civicrm_contribute_data(&$data, $enabled) {
       'allow empty' => TRUE,
     ),
     'sort' => array(
-      'handler' => 'views_handler_sort',
+      'handler' => 'civicrm_handler_sort_pcp_raised_amount',
     ),
   );
 

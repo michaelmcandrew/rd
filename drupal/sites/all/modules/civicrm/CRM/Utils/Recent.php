@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +30,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -77,8 +79,7 @@ class CRM_Utils_Recent {
    * @access public
    * @static
    */
-  static
-  function &get() {
+  static function &get() {
     self::initialize();
     return self::$_recent;
   }
@@ -95,8 +96,7 @@ class CRM_Utils_Recent {
    * @access public
    * @static
    */
-  static
-  function add($title,
+  static function add($title,
     $url,
     $id,
     $type,
@@ -139,7 +139,6 @@ class CRM_Utils_Recent {
       array_pop(self::$_recent);
     }
 
-    require_once 'CRM/Utils/Hook.php';
     CRM_Utils_Hook::recent(self::$_recent);
 
     $session->set(self::STORE_NAME, self::$_recent);
@@ -154,8 +153,7 @@ class CRM_Utils_Recent {
    * @access public
    * @static
    */
-  static
-  function del($recentItem) {
+  static function del($recentItem) {
     self::initialize();
     $tempRecent = self::$_recent;
 
@@ -183,8 +181,7 @@ class CRM_Utils_Recent {
    * @access public
    * @static
    */
-  static
-  function delContact($id) {
+  static function delContact($id) {
     self::initialize();
 
     $tempRecent = self::$_recent;

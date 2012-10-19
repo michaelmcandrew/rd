@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -207,6 +207,11 @@ function _civicrm_event_data(&$data, $enabled) {
     'sort' => array(
       'handler' => 'civicrm_handler_sort_date',
     ),
+    'argument' => array(
+      'handler' => 'date_views_argument_handler',
+      'empty field name' => t('Undated'),
+      'is date' => TRUE,
+    ),
   );
 
   civicrm_views_add_date_arguments($data['civicrm_event'], array(
@@ -398,8 +403,8 @@ function _civicrm_event_data(&$data, $enabled) {
     'help' => t('The numeric ID of the Event'),
     'relationship' => array(
       'base' => 'civicrm_event',
-      'field' => 'event_id',
-      'left_field' => 'id',
+                                                                             'field' => 'event_id',
+                                                                             'left_field' => 'id',
       'handler' => 'views_handler_relationship',
       'label' => t('CiviCRM Event, with custom fields'),
     ),
@@ -594,7 +599,7 @@ function _civicrm_event_data(&$data, $enabled) {
     'title' => t('Fee Amount'),
     'help' => t('The amount the Participant has paid or will have to pay.'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(
@@ -651,4 +656,3 @@ function _civicrm_event_data(&$data, $enabled) {
     ),
   );
 }
-

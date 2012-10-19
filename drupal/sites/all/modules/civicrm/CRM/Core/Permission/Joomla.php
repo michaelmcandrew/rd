@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -87,19 +87,15 @@ class CRM_Core_Permission_Joomla {
    * @static
    * @access public
    */
-  static
-  function check($str) {
+  static function check($str) {
     $config = CRM_Core_Config::singleton();
 
     // ensure that we are running in a joomla context
     // we've not yet figured out how to bootstrap joomla, so we should
     // not execute hooks if joomla is not loaded
     if (defined('_JEXEC')) {
-      require_once 'CRM/Utils/String.php';
       $permissionStr = 'civicrm.' . CRM_Utils_String::munge(strtolower($str));
-      $permission = JFactory::getUser()->authorise($permissionStr,
-        'com_civicrm'
-      );
+      $permission = JFactory::getUser()->authorise($permissionStr, 'com_civicrm');
       return $permission;
     }
     else {
@@ -116,8 +112,7 @@ class CRM_Core_Permission_Joomla {
    * @static
    * @access public
    */
-  static
-  function checkGroupRole($array) {
+  static function checkGroupRole($array) {
     return FALSE;
   }
 

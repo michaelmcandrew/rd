@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Activity/Form/Task.php';
 
 /**
  * This class provides the functionality to email a group of contacts
@@ -130,6 +128,12 @@ class CRM_Activity_Form_Task_PickOption extends CRM_Activity_Form_Task {
    */
   static
   function formRule($fields) {
+    if ( !isset($fields['with_contact']) &&
+      !isset($fields['assigned_to']) &&
+      !isset($fields['created_by'])
+    ) {
+      return array('with_contact' => ts('You must select at least one email recipient type.'));
+    }
     return TRUE;
   }
 
@@ -146,7 +150,6 @@ class CRM_Activity_Form_Task_PickOption extends CRM_Activity_Form_Task {
     $this->_contacts = array();
     //get assignee contacts
     if ($params['assigned_to']) {
-      require_once 'CRM/Activity/BAO/ActivityAssignment.php';
       foreach ($this->_activityHolderIds as $key => $id) {
         $ids = array_keys(CRM_Activity_BAO_ActivityAssignment::getAssigneeNames($id));
         $this->_contacts = array_merge($this->_contacts, $ids);
@@ -154,7 +157,6 @@ class CRM_Activity_Form_Task_PickOption extends CRM_Activity_Form_Task {
     }
     //get target contacts
     if ($params['with_contact']) {
-      require_once 'CRM/Activity/BAO/ActivityTarget.php';
       foreach ($this->_activityHolderIds as $key => $id) {
         $ids = array_keys(CRM_Activity_BAO_ActivityTarget::getTargetNames($id));
         $this->_contacts = array_merge($this->_contacts, $ids);
@@ -168,6 +170,17 @@ class CRM_Activity_Form_Task_PickOption extends CRM_Activity_Form_Task {
       }
     }
     $this->_contacts = array_unique($this->_contacts);
+
+    //bounce to pick option if no contacts to send to
+    if ( empty($this->_contacts) ) {
+      $urlParams = "_qf_PickOption_display=true&qfKey={$params['qfKey']}";
+      $urlRedirect = CRM_Utils_System::url('civicrm/activity/search', $urlParams);
+      CRM_Core_Error::statusBounce(
+        ts('It appears you have no contacts with emails from the selected recipients.'),
+        $urlRedirect
+      );
+    }
+
     $this->set('contacts', $this->_contacts);
   }
 }

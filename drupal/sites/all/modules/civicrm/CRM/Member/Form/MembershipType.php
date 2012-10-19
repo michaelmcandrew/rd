@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Member/Form.php';
 
 /**
  * This class generates form components for Membership Type
@@ -135,7 +133,6 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
       CRM_Core_SelectValues::date(NULL, 'M d'), FALSE
     );
 
-    require_once 'CRM/Core/BAO/MessageTemplates.php';
     $msgTemplates = CRM_Core_BAO_MessageTemplates::getMessageTemplates(FALSE);
     $hasMsgTemplates = FALSE;
     if (!empty($msgTemplates)) {
@@ -171,12 +168,10 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
     // required in form rule
     $this->add('hidden', 'action', $this->_action);
 
-    require_once 'CRM/Contribute/PseudoConstant.php';
     $this->add('select', 'contribution_type_id', ts('Contribution Type'),
       array('' => ts('- select -')) + CRM_Contribute_PseudoConstant::contributionType()
     );
 
-    require_once 'CRM/Contact/BAO/Relationship.php';
     $relTypeInd = CRM_Contact_BAO_Relationship::getContactRelationshipType(NULL, NULL, NULL, NULL, TRUE);
     if (is_array($relTypeInd)) {
       asort($relTypeInd);
@@ -238,7 +233,6 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
     }
     $membershipRecords = FALSE;
     if ($this->_action & CRM_Core_Action::UPDATE) {
-      require_once 'CRM/Member/BAO/Membership.php';
       $membershipType = new CRM_Member_BAO_Membership();
       $membershipType->membership_type_id = $this->_id;
       if ($membershipType->find(TRUE)) {
@@ -285,9 +279,7 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
    * @access public
    * @static
    */
-  static
-  function formRule($params) {
-    require_once 'CRM/Utils/Rule.php';
+  static function formRule($params) {
     $errors = array();
     if (!isset($params['_qf_MembershipType_refresh']) || !$params['_qf_MembershipType_refresh']) {
       if (!$params['name']) {
@@ -373,8 +365,10 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
     $renewalReminderDay = CRM_Utils_Array::value('renewal_reminder_day', $params);
     $renewalMsgId       = CRM_Utils_Array::value('renewal_msg_id', $params);
     $autoRenewalMsgId   = CRM_Utils_Array::value('autorenewal_msg_id', $params);
+    // FIXME: Commented out this form rule for 4.2 so that admins can disable existing membership type based renewal reminders when they
+    // implement the new reminder method via Schedule Reminders. CRM-8359 dgg
+    /*
     if (!((($renewalReminderDay && $renewalMsgId)) || (!$renewalReminderDay && !$renewalMsgId))) {
-
       if (!$renewalReminderDay) {
         $errors['renewal_reminder_day'] = ts('Please enter renewal reminder days.');
       }
@@ -382,6 +376,7 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
         $errors['renewal_msg_id'] = ts('Please select renewal message.');
       }
     }
+    */
     return empty($errors) ? TRUE : $errors;
   }
 
@@ -393,7 +388,6 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
    * @return None
    */
   public function postProcess() {
-    require_once 'CRM/Member/BAO/MembershipType.php';
     if ($this->_action & CRM_Core_Action::DELETE) {
       CRM_Utils_Weight::delWeight('CRM_Member_DAO_MembershipType', $this->_id);
       CRM_Member_BAO_MembershipType::del($this->_id);
@@ -456,7 +450,6 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
         }
         if (!empty($relIds)) {
           $hasRelTypeVal = TRUE;
-          require_once 'CRM/Core/DAO.php';
           $params['relationship_type_id'] = implode(CRM_Core_DAO::VALUE_SEPARATOR, $relIds);
           $params['relationship_direction'] = implode(CRM_Core_DAO::VALUE_SEPARATOR, $relDirection);
         }
@@ -503,7 +496,9 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
         $ids['membershipType'] = $this->_id;
       }
 
+
       $membershipType = CRM_Member_BAO_MembershipType::add($params, $ids);
+
       CRM_Core_Session::setStatus(ts('The membership type \'%1\' has been saved.',
           array(1 => $membershipType->name)
         ));
@@ -513,6 +508,26 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
         $session->replaceUserContext(CRM_Utils_System::url('civicrm/admin/member/membershipType',
             'action=add&reset=1'
           ));
+      }
+    }
+  }
+
+  function checkPreviousPriceField($previousID, $priceSetId, $membershipTypeId, &$optionsIds) {
+    if ($previousID) {
+      $editedFieldParams = array(
+        'price_set_id ' => $priceSetId,
+        'name' => $previousID,
+      );
+      $editedResults = array();
+      CRM_Price_BAO_Field::retrieve($editedFieldParams, $editedResults);
+      if (!empty($editedResults)) {
+        $editedFieldParams = array(
+          'price_field_id' => $editedResults['id'],
+          'membership_type_id' => $membershipTypeId,
+        );
+        $editedResults = array();
+        CRM_Price_BAO_FieldValue::retrieve($editedFieldParams, $editedResults);
+        $optionsIds['option_id'][1] = CRM_Utils_Array::value('id', $editedResults);
       }
     }
   }
@@ -536,7 +551,6 @@ class CRM_Member_Form_MembershipType extends CRM_Member_Form {
     $searchValues[] = array('contact_type', '=', 'organization', 0, 0);
 
     // get the count of contact
-    require_once 'CRM/Contact/BAO/Contact.php';
     $contactBAO  = new CRM_Contact_BAO_Contact();
     $query       = new CRM_Contact_BAO_Query($searchValues);
     $searchCount = $query->searchQuery(0, 0, NULL, TRUE);

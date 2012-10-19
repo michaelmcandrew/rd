@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contribute/Import/Parser.php';
 
 /**
  * class to parse contribution csv files
@@ -71,7 +69,6 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
    * @access public
    */
   function init() {
-    require_once 'CRM/Contribute/BAO/Contribution.php';
     $fields = CRM_Contribute_BAO_Contribution::importableFields($this->_contactType, FALSE);
 
     $fields = array_merge($fields,
@@ -166,7 +163,6 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
     $response = $this->setActiveFieldValues($values, $erroneousField);
 
     $params = &$this->getActiveFieldParams();
-    require_once 'CRM/Import/Parser/Contact.php';
     $errorMessage = NULL;
 
     //for date-Formats
@@ -305,7 +301,6 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
 
     static $indieFields = NULL;
     if ($indieFields == NULL) {
-      require_once ('CRM/Contribute/DAO/Contribution.php');
       $tempIndieFields = CRM_Contribute_DAO_Contribution::import();
       $indieFields = $tempIndieFields;
     }
@@ -366,8 +361,8 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
     else {
       //fix for CRM-2219 - Update Contribution
       // onDuplicate == CRM_Contribute_Import_Parser::DUPLICATE_UPDATE
-      if ($paramValues['invoice_id'] || $paramValues['trxn_id'] || $paramValues['contribution_id']) {
-        require_once 'CRM/Contribute/BAO/Contribution.php';
+      if (CRM_Utils_Array::value('invoice_id',$paramValues) || 
+          CRM_Utils_Array::value('trxn_id', $paramValues) || $paramValues['contribution_id']) {
         $dupeIds = array(
           'id' => CRM_Utils_Array::value('contribution_id', $paramValues),
           'trxn_id' => CRM_Utils_Array::value('trxn_id', $paramValues),
@@ -375,6 +370,7 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
         );
 
         $ids['contribution'] = CRM_Contribute_BAO_Contribution::checkDuplicateIds($dupeIds);
+
         if ($ids['contribution']) {
           $formatted['id'] = $ids['contribution'];
           $formatted['custom'] = CRM_Core_BAO_CustomField::postProcess($formatted,
@@ -383,10 +379,9 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
             'Contribution'
           );
           //process note
-          if ($paramValues['note']) {
+          if (CRM_Utils_Array::value('note', $paramValues)) {
             $noteID = array();
             $contactID = CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_Contribution', $ids['contribution'], 'contact_id');
-            require_once 'CRM/Core/BAO/Note.php';
             $daoNote = new CRM_Core_BAO_Note();
             $daoNote->entity_table = 'civicrm_contribution';
             $daoNote->entity_id = $ids['contribution'];
@@ -415,8 +410,10 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
               $formatted['softID'] = $existingSoftCredit['soft_credit_id'];
             }
           }
-
+          
           $newContribution = CRM_Contribute_BAO_Contribution::create($formatted, $ids);
+          CRM_Price_BAO_LineItem::syncLineItems($ids['contribution'], 'civicrm_contribution', CRM_Utils_Array::value('total_amount',$formatted));
+
           $this->_newContributions[] = $newContribution->id;
 
           //return soft valid since we need to show how soft credits were added
@@ -502,7 +499,6 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
           'contact_type' => $this->_contactType,
           'level' => 'Strict',
         );
-        require_once 'CRM/Dedupe/BAO/Rule.php';
         $fieldsArray = CRM_Dedupe_BAO_Rule::dedupeRuleFields($ruleParams);
 
         foreach ($fieldsArray as $value) {
@@ -584,7 +580,6 @@ class CRM_Contribute_Import_Parser_Contribution extends CRM_Contribute_Import_Pa
         'contribution_id', $formatted['contribution_id']
       );
 
-      require_once 'CRM/Pledge/BAO/PledgePayment.php';
       CRM_Pledge_BAO_PledgePayment::updatePledgePaymentStatus($formatted['pledge_id'],
         array($formatted['pledge_payment_id']),
         $completeStatusID,

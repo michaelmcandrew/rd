@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,12 +28,10 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
-
-require_once 'CRM/Contact/Form/Task.php';
 
 /**
  * This class provides the functionality to save a search
@@ -55,10 +53,20 @@ class CRM_Contact_Form_Task_Print extends CRM_Contact_Form_Task {
     $this->assign('id', $this->get('id'));
     $this->assign('pageTitle', ts('CiviCRM Contact Listing'));
 
+    $params = $this->get('queryParams');
+    if (!empty($this->_contactIds)) {
+      //using _contactIds field for creating params for query so that multiple selections on multiple pages
+      //can be printed.
+      foreach ($this->_contactIds as $contactId) {
+        $params[] = array(
+          CRM_Core_Form::CB_PREFIX . $contactId,
+          '=',
+          1, 0, 0);
+      }
+    }
+
     // create the selector, controller and run - store results in session
     $fv = $this->get('formValues');
-
-    $params = $this->get('queryParams');
     $returnProperties = $this->get('returnProperties');
 
     $sortID = NULL;
@@ -81,11 +89,11 @@ class CRM_Contact_Form_Task_Print extends CRM_Contact_Form_Task {
     eval('$selector   = new ' .
       $selectorName .
       '( $customSearchClass,
-                 $fv,
-                 $params,
-                 $returnP,
-                 $this->_action,
-                 $includeContactIds );'
+         $fv,
+         $params,
+         $returnP,
+         $this->_action,
+         $includeContactIds );'
     );
     $controller = new CRM_Core_Selector_Controller($selector,
       NULL,

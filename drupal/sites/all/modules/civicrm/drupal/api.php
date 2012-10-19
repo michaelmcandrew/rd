@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -112,28 +112,6 @@ function civicrm_drupal_create_user($email, $rid = NULL) {
   }
 
   return $params['uid'];
-}
-
-function civicrm_modify_role_id($op, $uid, $rid, $roleName = NULL) {
-  $a = func_get_args();
-  if ($roleName) {
-    $rid = civicrm_drupal_role_id($roleName);
-    if (!$rid) {
-      return;
-    }
-  }
-
-  if ($op == 'insert') {
-    // check if this combination is already there
-    $roles_result = db_query('SELECT rid FROM {users_roles} WHERE uid = %d AND rid = %d', $uid, $rid);
-    if (!db_fetch_object($roles_result)) {
-      // insert only if not present
-      db_query('INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)', $uid, $rid);
-    }
-  }
-  elseif ($op == 'delete') {
-    db_query('DELETE FROM {users_roles} WHERE uid = %d AND rid = %d', $uid, $rid);
-  }
 }
 
 /**

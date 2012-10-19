@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,9 +32,6 @@
    * Grateful acknowledgements go to Donald Lobo for invaluable assistance
    * in creating this payment processor module
    */
-
-
-require_once 'CRM/Core/Payment/BaseIPN.php';
 class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
 
   /**
@@ -130,7 +127,11 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
     }
     $ids['contributionRecur'] = $ids['contributionPage'] = NULL;
 
-    if (!$this->validateData($input, $ids, $objects)) {
+    $paymentProcessorID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_PaymentProcessorType',
+      'PayPal_Express', 'id', 'name'
+    );
+
+    if (!$this->validateData($input, $ids, $objects, TRUE, $paymentProcessorID)) {
       return FALSE;
     }
 
@@ -158,7 +159,6 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
       return;
     }
 
-    require_once 'CRM/Core/Transaction.php';
     $transaction = new CRM_Core_Transaction();
 
     // fix for CRM-2842
@@ -174,7 +174,7 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
       return TRUE;
     }
     else {
-      /* Since trxn_id hasn't got any use here, 
+      /* Since trxn_id hasn't got any use here,
              * lets make use of it by passing the eventID/membershipTypeID to next level.
              * And change trxn_id to the payment processor reference before finishing db update */
 
@@ -202,7 +202,6 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
    */
   static
   function getContext($privateData, $orderNo) {
-    require_once 'CRM/Contribute/DAO/Contribution.php';
 
     $component = NULL;
     $isTest = NULL;
@@ -237,12 +236,6 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
         echo "Failure: Could not find contribution page for contribution record: $contributionID<p>";
         exit();
       }
-
-      // get the payment processor id from contribution page
-      $paymentProcessorID = CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_ContributionPage',
-        $contribution->contribution_page_id,
-        'payment_processor_id'
-      );
     }
     else {
 
@@ -256,7 +249,6 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
 
       // we are in event mode
       // make sure event exists and is valid
-      require_once 'CRM/Event/DAO/Event.php';
       $event = new CRM_Event_DAO_Event();
       $event->id = $eventID;
       if (!$event->find(TRUE)) {
@@ -264,18 +256,9 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
         echo "Failure: Could not find event: $eventID<p>";
         exit();
       }
-
-      // get the payment processor id from contribution page
-      $paymentProcessorID = $event->payment_processor_id;
     }
 
-    if (!$paymentProcessorID) {
-      CRM_Core_Error::debug_log_message("Could not find payment processor for contribution record: $contributionID");
-      echo "Failure: Could not find payment processor for contribution record: $contributionID<p>";
-      exit();
-    }
-
-    return array($isTest, $component, $paymentProcessorID, $duplicateTransaction);
+    return array($isTest, $component, $duplicateTransaction);
   }
 
   /**
@@ -299,20 +282,19 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
     }
 
     if ($dps_method == "pxpay") {
-      require_once 'CRM/Core/Payment/PaymentExpressUtils.php';
-      $processResponse = _valueXml(array(
+      $processResponse = CRM_Core_Payment_PaymentExpressUtils::_valueXml(array(
           'PxPayUserId' => $dps_user,
           'PxPayKey' => $dps_key,
           'Response' => $_GET['result'],
         ));
-      $processResponse = _valueXml('ProcessResponse', $processResponse);
+      $processResponse = CRM_Core_Payment_PaymentExpressUtils::_valueXml('ProcessResponse', $processResponse);
 
       fwrite($message_log, sprintf("\n\r%s:- %s\n", date("D M j G:i:s T Y"),
           $processResponse
         ));
 
       // Send the XML-formatted validation request to DPS so that we can receive a decrypted XML response which contains the transaction results
-      $curl = _initCURL($processResponse, $dps_url);
+      $curl = CRM_Core_Payment_PaymentExpressUtils::_initCURL($processResponse, $dps_url);
 
       fwrite($message_log, sprintf("\n\r%s:- %s\n", date("D M j G:i:s T Y"),
           $curl
@@ -325,17 +307,17 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
         curl_close($curl);
 
         // Assign the returned XML values to variables
-        $valid             = _xmlAttribute($response, 'valid');
-        $success           = _xmlElement($response, 'Success');
-        $txnId             = _xmlElement($response, 'TxnId');
-        $responseText      = _xmlElement($response, 'ResponseText');
-        $authCode          = _xmlElement($response, 'AuthCode');
-        $DPStxnRef         = _xmlElement($response, 'DpsTxnRef');
-        $qfKey             = _xmlElement($response, "TxnData1");
-        $privateData       = _xmlElement($response, "TxnData2");
-        $component         = _xmlElement($response, "TxnData3");
-        $amount            = _xmlElement($response, "AmountSettlement");
-        $merchantReference = _xmlElement($response, "MerchantReference");
+        $valid             = CRM_Core_Payment_PaymentExpressUtils::_xmlAttribute($response, 'valid');
+        $success           = CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, 'Success');
+        $txnId             = CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, 'TxnId');
+        $responseText      = CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, 'ResponseText');
+        $authCode          = CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, 'AuthCode');
+        $DPStxnRef         = CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, 'DpsTxnRef');
+        $qfKey             = CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, "TxnData1");
+        $privateData       = CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, "TxnData2");
+        list($component,$paymentProcessorID,)  =explode(',', CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, "TxnData3"));
+        $amount            = CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, "AmountSettlement");
+        $merchantReference = CRM_Core_Payment_PaymentExpressUtils::_xmlElement($response, "MerchantReference");
       }
       else {
         // calling DPS failed
@@ -354,7 +336,7 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
 
       $qfKey             = $rsp->getTxnData1();
       $privateData       = $rsp->getTxnData2();
-      $component         = $rsp->getTxnData3();
+      list($component,$paymentProcessorID)  = explode(',',$rsp->getTxnData3());
       $success           = $rsp->getSuccess();
       $authCode          = $rsp->getAuthCode();
       $DPStxnRef         = $rsp->getDpsTxnRef();
@@ -386,11 +368,10 @@ class CRM_Core_Payment_PaymentExpressIPN extends CRM_Core_Payment_BaseIPN {
 
     $transactionReference = $authCode . "-" . $DPStxnRef;
 
-    list($mode, $component, $paymentProcessorID, $duplicateTransaction) = self::getContext($privateData, $transactionReference);
+    list($mode, $component, $duplicateTransaction) = self::getContext($privateData, $transactionReference);
     $mode = $mode ? 'test' : 'live';
 
 
-    require_once 'CRM/Core/BAO/PaymentProcessor.php';
     $paymentProcessor = CRM_Core_BAO_PaymentProcessor::getPayment($paymentProcessorID,
       $mode
     );

@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -32,6 +32,7 @@
  */
 class civicrm_handler_field_file extends views_handler_field {
   function construct() {
+    parent::construct();
     if (!civicrm_initialize()) {
       return;
     }

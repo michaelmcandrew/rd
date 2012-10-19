@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -270,7 +270,7 @@ function _civicrm_campaign_data(&$data, $enabled) {
     'title' => t('Campaign Monetary Goal'),
     'help' => t('The Monetary goal of the campaign'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'civicrm_handler_field_money',
       'click sortable' => TRUE,
     ),
     'argument' => array(

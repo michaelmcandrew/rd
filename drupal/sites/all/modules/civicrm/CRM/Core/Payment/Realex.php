@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -38,8 +38,6 @@
  * @author Tom Kirkpatrick <tkp@kirkdesigns.co.uk>
  * $Id$
  */
-
-require_once 'CRM/Core/Payment.php';
 class CRM_Core_Payment_Realex extends CRM_Core_Payment {
   CONST AUTH_APPROVED = '00';
 
@@ -150,19 +148,25 @@ class CRM_Core_Payment_Realex extends CRM_Core_Payment {
 			    <account>{$this->_getParam('account')}</account>
 			    <orderid>{$this->_getParam('order_id')}</orderid>
 			    <amount currency='{$this->_getParam('currency')}'>{$this->_getParam('amount')}</amount>
-			    <card> 
+			    <card>
 				<number>{$this->_getParam('card_number')}</number>
 				<expdate>{$this->_getParam('exp_date')}</expdate>
-				<type>{$this->_getParam('card_type')}</type> 
-				<chname>{$this->_getParam('card_name')}</chname> 
+				<type>{$this->_getParam('card_type')}</type>
+				<chname>{$this->_getParam('card_name')}</chname>
 				<issueno>{$this->_getParam('issue_number')}</issueno>
 				<cvn>
 				    <number>{$this->_getParam('cvn')}</number>
 				    <presind>1</presind>
 				</cvn>
-			    </card> 
+			    </card>
 			    <autosettle flag='1'/>
 			    <sha1hash>$sha1hash</sha1hash>
+          <comments>
+            <comment id='1'>{$this->_getParam('comments')}</comment>
+          </comments>
+          <tssinfo>
+            <varref>{$this->_getParam('varref')}</varref>
+          </tssinfo>
 			</request>";
 
     /**********************************************************
@@ -178,7 +182,7 @@ class CRM_Core_Payment_Realex extends CRM_Core_Payment {
     curl_setopt($submit, CURLOPT_HTTPHEADER, array('SOAPAction: ""'));
     curl_setopt($submit, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($submit, CURLOPT_TIMEOUT, 60);
-    curl_setopt($submit, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_setopt($submit, CURLOPT_SSL_VERIFYPEER, CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'verifySSL'));
     curl_setopt($submit, CURLOPT_HEADER, 0);
 
     // take caching out of the picture
@@ -284,7 +288,7 @@ class CRM_Core_Payment_Realex extends CRM_Core_Payment {
           array(
             1 => xml_get_error_code($xmlparser),
             2 => xml_get_current_line_number($xmlparser),
-            3 => xml_get_current_column_number($xmlparser),
+            3 => xml_get_current_column_number($xmlparser)
           )
         );
       }
@@ -329,8 +333,8 @@ class CRM_Core_Payment_Realex extends CRM_Core_Payment {
     }
 
     // format amount to be in smallest possible units
-    list($bills, $pennies) = explode('.', $params['amount']);
-    $this->_setParam('amount', 100 * $bills + $pennies);
+    //list($bills, $pennies) = explode('.', $params['amount']);
+    $this->_setParam('amount', 100 * $params['amount']);
 
     switch (strtolower($params['credit_card_type'])) {
       case 'mastercard':
@@ -383,7 +387,11 @@ class CRM_Core_Payment_Realex extends CRM_Core_Payment {
     $this->_setParam('country', $params['country']);
     $this->_setParam('post_code', $params['postal_code']);
     $this->_setParam('order_id', $params['invoiceID']);
+    $params['issue_number'] = (isset($params['issue_number']) ? $params['issue_number'] : '');
     $this->_setParam('issue_number', $params['issue_number']);
+    $this->_setParam('varref', $params['contributionType_name']);
+    $comment = $params['description'] . ' (page id:' . $params['contributionPageID'] . ')';
+    $this->_setParam('comments', $comment);
     //$this->_setParam('currency',      $params['currencyID']);
 
     // set the currency to the default which can be overrided.
@@ -396,7 +404,7 @@ class CRM_Core_Payment_Realex extends CRM_Core_Payment {
     $expyear  = substr((string)$params['credit_card_exp_date']['Y'], 2, 2);
     $this->_setParam('exp_date', $expmonth . $expyear);
 
-    if ((strlen($params['credit_card_start_date']['M']) !== 0) &&
+    if (isset($params['credit_card_start_date']) && (strlen($params['credit_card_start_date']['M']) !== 0) &&
       (strlen($params['credit_card_start_date']['Y']) !== 0)
     ) {
       $startmonth = (string)$params['credit_card_start_date']['M'];
@@ -420,7 +428,6 @@ class CRM_Core_Payment_Realex extends CRM_Core_Payment {
    * @return bool                  True if ID exists, else false
    */
   function _checkDupe($invoiceId) {
-    require_once 'CRM/Contribute/DAO/Contribution.php';
     $contribution = new CRM_Contribute_DAO_Contribution();
     $contribution->invoice_id = $invoiceId;
     return $contribution->find();

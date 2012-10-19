@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -51,8 +51,7 @@ class CRM_Contribute_BAO_Contribution_Utils {
    * @static
    * @access public
    */
-  static
-  function processConfirm(&$form,
+  static function processConfirm(&$form,
     &$paymentParams,
     &$premiumParams,
     $contactID,
@@ -60,10 +59,8 @@ class CRM_Contribute_BAO_Contribution_Utils {
     $component = 'contribution',
     $fieldTypes = NULL
   ) {
-    require_once 'CRM/Core/Payment/Form.php';
     CRM_Core_Payment_Form::mapParams($form->_bltID, $form->_params, $paymentParams, TRUE);
 
-    require_once 'CRM/Contribute/DAO/ContributionType.php';
     $contributionType = new CRM_Contribute_DAO_ContributionType();
     if (isset($paymentParams['contribution_type'])) {
       $contributionType->id = $paymentParams['contribution_type'];
@@ -88,8 +85,9 @@ class CRM_Contribute_BAO_Contribution_Utils {
     $paymentParams['contributionPageID'] = $form->_params['contributionPageID'] = $form->_values['id'];
 
 
+    $payment = NULL;
+    $paymentObjError = ts('The system did not record payment details for this payment and so could not process the transaction. Please report this error to the site administrator.');
     if ($form->_values['is_monetary'] && $form->_amount > 0.0 && is_array($form->_paymentProcessor)) {
-      require_once 'CRM/Core/Payment.php';
       $payment = CRM_Core_Payment::singleton($form->_mode, $form->_paymentProcessor, $form);
     }
 
@@ -112,12 +110,16 @@ class CRM_Contribute_BAO_Contribution_Utils {
         $contributionType,
         TRUE, TRUE, TRUE
       );
-      $form->_params['contributionID'] = $contribution->id;
+
+      if ($contribution) {
+        $form->_params['contributionID'] = $contribution->id;
+      }
+
       $form->_params['contributionTypeID'] = $contributionType->id;
       $form->_params['item_name'] = $form->_params['description'];
       $form->_params['receive_date'] = $now;
 
-      if ($form->_values['is_recur'] &&
+      if ($contribution && $form->_values['is_recur'] &&
         $contribution->contribution_recur_id
       ) {
         $form->_params['contributionRecurID'] = $contribution->contribution_recur_id;
@@ -135,7 +137,10 @@ class CRM_Contribute_BAO_Contribution_Utils {
         }
         else {
           if (!$form->_params['is_pay_later']) {
-            $result = &$payment->doTransferCheckout($form->_params, 'contribute');
+            if (is_object($payment)) 
+              $result = &$payment->doTransferCheckout($form->_params, 'contribute');
+            else 
+              CRM_Core_Error::fatal($paymentObjError);
           }
           else {
             // follow similar flow as IPN
@@ -155,7 +160,6 @@ class CRM_Contribute_BAO_Contribution_Utils {
               $form->_values['priceSetID'] = $form->_priceSetId;
             }
 
-            require_once 'CRM/Contribute/BAO/ContributionPage.php';
             $form->_values['contribution_id'] = $contribution->id;
             $form->_values['contribution_page_id'] = $contribution->contribution_page_id;
 
@@ -173,10 +177,16 @@ class CRM_Contribute_BAO_Contribution_Utils {
 
         // determine if express + recurring and direct accordingly
         if ($paymentParams['is_recur'] == 1) {
-          $result = &$payment->createRecurringPayments($paymentParams);
+          if (is_object($payment)) 
+            $result = &$payment->createRecurringPayments($paymentParams);
+          else 
+            CRM_Core_Error::fatal($paymentObjError);
         }
         else {
-          $result = &$payment->doExpressCheckout($paymentParams);
+          if (is_object($payment)) 
+            $result = &$payment->doExpressCheckout($paymentParams);
+          else 
+            CRM_Core_Error::fatal($paymentObjError);
         }
       }
     }
@@ -208,7 +218,10 @@ class CRM_Contribute_BAO_Contribution_Utils {
         }
       }
 
-      $result = &$payment->doDirectPayment($paymentParams);
+      if (is_object($payment)) 
+        $result = &$payment->doDirectPayment($paymentParams);
+      else 
+        CRM_Core_Error::fatal($paymentObjError);
     }
 
     if ($component == 'membership') {
@@ -233,13 +246,13 @@ class CRM_Contribute_BAO_Contribution_Utils {
       }
       $membershipResult[1] = $result;
     }
-    else {
+    elseif ($result) {
       if ($result) {
         $form->_params = array_merge($form->_params, $result);
       }
       $form->_params['receive_date'] = $now;
       $form->set('params', $form->_params);
-      $form->assign('trxn_id', $result['trxn_id']);
+      $form->assign('trxn_id', CRM_Utils_Array::value('trxn_id', $result));
       $form->assign('receive_date',
         CRM_Utils_Date::mysqlToIso($form->_params['receive_date'])
       );
@@ -290,11 +303,13 @@ class CRM_Contribute_BAO_Contribution_Utils {
     }
 
     // finally send an email receipt
-    require_once 'CRM/Contribute/BAO/ContributionPage.php';
-    $form->_values['contribution_id'] = $contribution->id;
-    CRM_Contribute_BAO_ContributionPage::sendMail($contactID, $form->_values, $contribution->is_test,
-      FALSE, $fieldTypes
-    );
+    if ($contribution) {
+      $form->_values['contribution_id'] = $contribution->id;
+      CRM_Contribute_BAO_ContributionPage::sendMail($contactID,
+        $form->_values, $contribution->is_test,
+        FALSE, $fieldTypes
+      );
+    }
   }
 
   /**
@@ -308,8 +323,7 @@ class CRM_Contribute_BAO_Contribution_Utils {
    * @static
    * @access public
    */
-  static
-  function contributionChartMonthly($param) {
+  static function contributionChartMonthly($param) {
     if ($param) {
       $param = array(1 => array($param, 'Integer'));
     }
@@ -322,12 +336,12 @@ class CRM_Contribute_BAO_Contribution_Utils {
     SELECT   sum(contrib.total_amount) AS ctAmt,
              MONTH( contrib.receive_date) AS contribMonth
       FROM   civicrm_contribution AS contrib
-INNER JOIN   civicrm_contact AS contact ON ( contact.id = contrib.contact_id ) 
+INNER JOIN   civicrm_contact AS contact ON ( contact.id = contrib.contact_id )
      WHERE   contrib.contact_id = contact.id
        AND   ( contrib.is_test = 0 OR contrib.is_test IS NULL )
        AND   contrib.contribution_status_id = 1
-       AND   date_format(contrib.receive_date,'%Y') = %1 
-       AND   contact.is_deleted = 0 
+       AND   date_format(contrib.receive_date,'%Y') = %1
+       AND   contact.is_deleted = 0
   GROUP BY   contribMonth
   ORDER BY   month(contrib.receive_date)";
 
@@ -350,16 +364,15 @@ INNER JOIN   civicrm_contact AS contact ON ( contact.id = contrib.contact_id )
    * @static
    * @access public
    */
-  static
-  function contributionChartYearly() {
+  static function contributionChartYearly() {
     $query = '
     SELECT   sum(contrib.total_amount) AS ctAmt,
              year(contrib.receive_date) as contribYear
       FROM   civicrm_contribution AS contrib
-INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id ) 
+INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
      WHERE   ( contrib.is_test = 0 OR contrib.is_test IS NULL )
        AND   contrib.contribution_status_id = 1
-       AND   contact.is_deleted = 0 
+       AND   contact.is_deleted = 0
   GROUP BY   contribYear
   ORDER BY   contribYear';
     $dao = CRM_Core_DAO::executeQuery($query);
@@ -373,8 +386,7 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
     return $params;
   }
 
-  static
-  function createCMSUser(&$params, $contactID, $mail) {
+  static function createCMSUser(&$params, $contactID, $mail) {
     // lets ensure we only create one CMS user
     static $created = FALSE;
 
@@ -385,15 +397,13 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
 
     if (CRM_Utils_Array::value('cms_create_account', $params)) {
       $params['contactID'] = $contactID;
-      require_once 'CRM/Core/BAO/CMSUser.php';
       if (!CRM_Core_BAO_CMSUser::create($params, $mail)) {
         CRM_Core_Error::statusBounce(ts('Your profile is not saved and Account is not created.'));
       }
     }
   }
 
-  static
-  function _fillCommonParams(&$params, $type = 'paypal') {
+  static function _fillCommonParams(&$params, $type = 'paypal') {
     if (array_key_exists('transaction', $params)) {
       $transaction = &$params['transaction'];
     }
@@ -420,7 +430,6 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
 
     if (isset($transaction['trxn_id'])) {
       // set error message if transaction has already been processed.
-      require_once 'CRM/Contribute/DAO/Contribution.php';
       $contribution = new CRM_Contribute_DAO_Contribution();
       $contribution->trxn_id = $transaction['trxn_id'];
       if ($contribution->find(TRUE)) {
@@ -433,7 +442,6 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
     }
 
     if (!isset($transaction['contribution_type_id'])) {
-      require_once 'CRM/Contribute/PseudoConstant.php';
       $contributionTypes = array_keys(CRM_Contribute_PseudoConstant::contributionType());
       $transaction['contribution_type_id'] = $contributionTypes[0];
     }
@@ -459,8 +467,7 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
     return TRUE;
   }
 
-  static
-  function formatAPIParams($apiParams, $mapper, $type = 'paypal', $category = TRUE) {
+  static function formatAPIParams($apiParams, $mapper, $type = 'paypal', $category = TRUE) {
     $type = strtolower($type);
 
     if (!in_array($type, array(
@@ -653,14 +660,12 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
     }
   }
 
-  static
-  function processAPIContribution($params) {
+  static function processAPIContribution($params) {
     if (empty($params) || array_key_exists('error', $params)) {
       return FALSE;
     }
 
     // add contact using dedupe rule
-    require_once 'CRM/Dedupe/Finder.php';
     $dedupeParams = CRM_Dedupe_Finder::formatParams($params, 'Individual');
     $dedupeParams['check_permission'] = FALSE;
     $dupeIds = CRM_Dedupe_Finder::dupesByParams($dedupeParams, 'Individual');
@@ -668,7 +673,6 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
     if (CRM_Utils_Array::value(0, $dupeIds)) {
       $params['contact_id'] = $dupeIds[0];
     }
-    require_once 'CRM/Contact/BAO/Contact.php';
     $contact = CRM_Contact_BAO_Contact::create($params);
     if (!$contact->id) {
       return FALSE;
@@ -698,7 +702,6 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
     // if this is a recurring contribution then process it first
     if ($params['trxn_type'] == 'subscrpayment') {
       // see if a recurring record already exists
-      require_once 'CRM/Contribute/BAO/ContributionRecur.php';
       $recurring = new CRM_Contribute_BAO_ContributionRecur;
       $recurring->processor_id = $params['processor_id'];
       if (!$recurring->find(TRUE)) {
@@ -725,7 +728,6 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
       }
     }
 
-    require_once 'CRM/Contribute/BAO/Contribution.php';
     $contribution = &CRM_Contribute_BAO_Contribution::create($params,
       CRM_Core_DAO::$_nullArray
     );
@@ -736,8 +738,7 @@ INNER JOIN   civicrm_contact contact ON ( contact.id = contrib.contact_id )
     return TRUE;
   }
 
-  static
-  function getFirstLastDetails($contactID) {
+  static function getFirstLastDetails($contactID) {
     static $_cache;
 
     if (!$_cache) {

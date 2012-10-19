@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -54,10 +54,8 @@ class CRM_Import_Page_AJAX {
       echo $str;
     }
     else {
-      require_once 'Services/JSON.php';
-      $json = new Services_JSON();
       $status = "<div class='description'>&nbsp; " . ts('No processing status reported yet.') . "</div>";
-      echo $json->encode(array(0, $status));
+      echo json_encode(array(0, $status));
     }
     CRM_Utils_System::civiExit();
   }

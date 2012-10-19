@@ -1,7 +1,7 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -38,6 +38,7 @@
  */
 class civicrm_handler_field_custom_file extends views_handler_field {
   function construct() {
+    parent::construct();
     civicrm_initialize();
     $this->additional_fields['entity_id'] = 'entity_id';
   }

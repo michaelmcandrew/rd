@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2010                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,10 +33,9 @@
  * @package CiviCRM_APIv3
  * @subpackage API_Address
  *
- * @copyright CiviCRM LLC (c) 2004-2010
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: Address.php 2011-02-16 ErikHommel $
  */
-
 
 require_once 'CRM/Core/BAO/Address.php';
 
@@ -49,12 +50,10 @@ require_once 'CRM/Core/BAO/Address.php';
  * @access public
  */
 function civicrm_api3_address_create(&$params) {
-
-  /*
-	 * if street_parsing, street_address has to be parsed into
-	 * separate parts
-	 */
-
+  /**
+   * if street_parsing, street_address has to be parsed into
+   * separate parts
+   */
   if (array_key_exists('street_parsing', $params)) {
     if ($params['street_parsing'] == 1) {
       if (array_key_exists('street_address', $params)) {
@@ -78,12 +77,11 @@ function civicrm_api3_address_create(&$params) {
       }
     }
   }
-  /*
-	  * create array for BAO (expects address params in as an
-	  * element in array 'address'
-	  */
 
-
+  /**
+   * create array for BAO (expects address params in as an
+   * element in array 'address'
+   */
   $addressBAO = CRM_Core_BAO_Address::add($params, TRUE);
   if (empty($addressBAO)) {
     return civicrm_api3_create_error("Address is not created or updated ");
@@ -94,17 +92,17 @@ function civicrm_api3_address_create(&$params) {
     return civicrm_api3_create_success($values, $params, 'address', $addressBAO);
   }
 }
+
 /*
  * Adjust Metadata for Create action
- * 
+ *
  * @param array $params array or parameters determined by getfields
  */
 function _civicrm_api3_address_create_spec(&$params) {
   $params['location_type_id']['api.required'] = 1;
   $params['contact_id']['api.required'] = 1;
-  // TODO note this should be changes to a function call that checks if one exists
-  $params['is_primary']['api.default'] = 1;
   $params['country'] = array('title' => 'Name or 2-letter abbreviation of country. Looked up in civicrm_country table');
+  $params['street_parsing'] = array('title' => 'optional param to indicate you want the street_address field parsed into individual params');
 }
 
 /**

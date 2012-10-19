@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -28,7 +28,7 @@
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -41,7 +41,7 @@
  * if introducing additional functionality
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * $Id$
  *
  */
@@ -121,7 +121,8 @@ class CRM_Utils_Sort {
    *
    * @return void
    * @access public
-   */ function __construct(&$vars, $defaultSortOrder = NULL) {
+   */ 
+  function __construct(&$vars, $defaultSortOrder = NULL) {
     $this->_vars = array();
     $this->_response = array();
 
@@ -176,8 +177,7 @@ class CRM_Utils_Sort {
    * @static
    * @access public
    */
-  static
-  function sortIDValue($index, $dir) {
+  static function sortIDValue($index, $dir) {
     return ($dir == self::DESCENDING) ? $index . '_d' : $index . '_u';
   }
 
@@ -280,8 +280,7 @@ class CRM_Utils_Sort {
    * @return array of items sorted by weight
    * @access public
    */
-  static
-  function cmpFunc($a, $b) {
+  static function cmpFunc($a, $b) {
     return ($a['weight'] <= $b['weight']) ? -1 : 1;
   }
 }

@@ -1,9 +1,11 @@
 <?php
+// $Id$
+
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -31,7 +33,7 @@
  * @package CiviCRM_APIv3
  * @subpackage API_Participant
  *
- * @copyright CiviCRM LLC (c) 2004-2011
+ * @copyright CiviCRM LLC (c) 2004-2012
  * @version $Id: Participant.php 30486 2010-11-02 16:12:09Z shot $
  *
  */
@@ -71,9 +73,48 @@ function civicrm_api3_participant_create($params) {
   require_once 'CRM/Event/BAO/Participant.php';
 
   $participantBAO = CRM_Event_BAO_Participant::create($params);
+ 
+  if(empty($params['price_set_id']) && empty($params['id']) && CRM_Utils_Array::value('fee_level', $params)){
+    _civicrm_api3_participant_createlineitem($params, $participantBAO);
+  }
   _civicrm_api3_object_to_array($participantBAO, $participant[$participantBAO->id]);
-  return civicrm_api3_create_success($participant, $params, 'participant', 'create', $participantBAO);
+ 
+ return civicrm_api3_create_success($participant, $params, 'participant', 'create', $participantBAO);
 }
+
+/*
+ * Create a default participant line item
+ */
+function _civicrm_api3_participant_createlineitem(&$params, $participant){
+  $sql = "
+SELECT      ps.id AS setID, pf.id AS priceFieldID, pfv.id AS priceFieldValueID
+FROM  civicrm_price_set_entity cpse
+LEFT JOIN civicrm_price_set ps ON cpse.price_set_id = ps.id AND cpse.entity_id = {$params['event_id']} AND cpse.entity_table = 'civicrm_event'
+LEFT JOIN   civicrm_price_field pf ON pf.`price_set_id` = ps.id
+LEFT JOIN   civicrm_price_field_value pfv ON pfv.price_field_id = pf.id and pfv.label = '{$params['fee_level']}'
+where ps.id is not null
+";
+ 
+  $dao = CRM_Core_DAO::executeQuery($sql);
+  if ($dao->fetch()) {
+    $amount = CRM_Utils_Array::value('fee_amount', $params, 0);
+    $lineItemparams = array(
+      'price_field_id' => $dao->priceFieldID,
+      'price_field_value_id' => $dao->priceFieldValueID,
+      'entity_table' => 'civicrm_participant',
+      'entity_id' => $participant->id,
+      'label' => $params['fee_level'],
+      'qty' => 1,
+      'participant_count' => 0,
+      'unit_price' => $amount,
+      'line_total' => $amount,
+      'version' => 3,
+    ); 
+    civicrm_api('line_item', 'create', $lineItemparams);
+  }
+}
+ 
+
 /*
  * Adjust Metadata for Create action
  * 
@@ -100,43 +141,18 @@ function _civicrm_api3_participant_create_spec(&$params) {
  */
 function civicrm_api3_participant_get($params) {
 
-  $values = array();
-  if (isset($params['id'])) {
-    $params['participant_id'] = $params['id'];
-    unset($params['id']);
-  }
+  $options          = _civicrm_api3_get_options_from_params($params, TRUE,'participant','get');
+  $sort             = CRM_Utils_Array::value('sort', $options, NULL);
+  $offset           = CRM_Utils_Array::value('offset', $options);
+  $rowCount         = CRM_Utils_Array::value('limit', $options);
+  $smartGroupCache  = CRM_Utils_Array::value('smartGroupCache', $params);
+  $inputParams      = CRM_Utils_Array::value('input_params', $options, array());
+  $returnProperties = CRM_Utils_Array::value('return', $options, NULL);
 
-  $inputParams      = array();
-  $returnProperties = array();
-  $otherVars        = array('sort', 'offset', 'rowCount');
-
-  $sort     = NULL;
-  $offset   = 0;
-  $rowCount = 25;
-  foreach ($params as $n => $v) {
-    if (substr($n, 0, 7) == 'return.') {
-      $returnProperties[substr($n, 7)] = $v;
-    }
-    elseif (in_array($n, $otherVars)) {
-      $$n = $v;
-    }
-    else {
-      $inputParams[$n] = $v;
-    }
-  }
-
-  // add is_test to the clause if not present
-  if (!array_key_exists('participant_test', $inputParams)) {
-    $inputParams['participant_test'] = 0;
-  }
-
-  require_once 'CRM/Contact/BAO/Query.php';
-  require_once 'CRM/Event/BAO/Query.php';
   if (empty($returnProperties)) {
     $returnProperties = CRM_Event_BAO_Query::defaultReturnProperties(CRM_Contact_BAO_Query::MODE_EVENT);
   }
-
-  $newParams = CRM_Contact_BAO_Query::convertFormValues($params);
+  $newParams = CRM_Contact_BAO_Query::convertFormValues($inputParams);
   $query = new CRM_Contact_BAO_Query($newParams, $returnProperties, NULL,
     FALSE, FALSE, CRM_Contact_BAO_Query::MODE_EVENT
   );
@@ -157,6 +173,16 @@ function civicrm_api3_participant_get($params) {
   }
 
   return civicrm_api3_create_success($participant, $params, 'participant', 'get', $dao);
+}
+
+/*
+ * Adjust Metadata for Get action
+ * 
+ * The metadata is used for setting defaults, documentation & validation
+ * @param array $params array or parameters determined by getfields
+ */
+function _civicrm_api3_participant_get_spec(&$params) {
+  $params['participant_test']['api.default'] = 0;
 }
 
 /**
