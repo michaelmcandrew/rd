@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.1                                                |
+ | CiviCRM version 4.2                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2011                                |
+ | Copyright CiviCRM LLC (c) 2004-2012                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -97,8 +97,6 @@
        <td colspan="2">{include file="CRM/Custom/Form/CustomData.tpl"}</td>
     </tr>    
 {/if}
-
-
 
 {if 0 and $form.duration.html}
     <tr class="crm-case-form-block-duration">
