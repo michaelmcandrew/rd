@@ -96,6 +96,10 @@ while ($query_result->fetch()) {
 	$i++;
 	
 	$external_id = trimString($query_result->external_id_0);
+//	print_r(".".strlen($external_id).".");
+	print_r("         ");
+	print_r("external ID=>".$external_id."<=  ");
+	
 	$title = trimString($query_result->title__4);
 	$first_name = trimString($query_result->first_name_5);
 	$middle_name = trimString($query_result->middle_name_6);
@@ -128,6 +132,7 @@ while ($query_result->fetch()) {
 		'external_identifier' => $external_id,
 		'first_name' => $first_name,
 		'middle_name' => $middle_name,
+		'source' => 'Magic spreadsheet',
 		'last_name' => $surname,
 		'current_employer' => '',
 		'job_title' => '',
@@ -224,6 +229,15 @@ function createAddress($cid,$query_result){
 	$city = trimString($query_result->towncity__14);
 	$postcode = trimString($query_result->post_codezip__16);
 	$country = trimString($query_result->country__17);
+	
+	if (strlen($postcode) < '13'){
+		//that's fine do nothing
+	}else{
+		print_r("\n"."postcode too long"."\n");
+		$postcode = '';
+	}
+	
+	
 	
 	$addressParams=array('version' =>'3',
 				'contact_id' => $cid,
