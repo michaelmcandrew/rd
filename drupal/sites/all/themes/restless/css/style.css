@@ -1,3 +1,6 @@
+.clear {
+	clear: both;
+}
 html, body, #page {
 	height: 100%;
 }
@@ -8,7 +11,7 @@ body {
 	margin: 0;
 	padding: 0;
 }
-ul, li, ol {
+ul, ul.menu, li, ul li.leaf, ol {
 	list-style: none outside none;
 	margin: 0;
 	padding: 0;
@@ -39,8 +42,7 @@ h2 a {
 #featured div.section, 
 #messages div.section, 
 #main, 
-#footer-columns, 
-#footer { 
+#footer div.section { 
 	width: 960px;
 	margin: 0 auto;
 }
@@ -49,41 +51,64 @@ h2 a {
 	width: 230px;
 	float: left;
 }
-#secondary-menu {
-	width: 500px;
-	float: right;
-}
 #navigation {
 	background-color: #000;
 	height: 50px;
 	margin-bottom: 20px;
 }
 #main-menu {
-	width: 600px;
 	padding-top: 20px;
 	float: left;
 }
+#block-menu-menu-secondary-menu, 
+#block-menu-menu-ics-and-resources {
+	overflow: hidden;
+}
+#block-menu-menu-secondary-menu {
+	width: 600px;
+	float: left;
+}
+#block-menu-menu-ics-and-resources {
+	width: 125px;
+	float: right;
+}
+#ics-resources {
+	float: right;
+	margin-right: 56px;
+}
 #main-menu li,
-#secondary-menu li {
+#block-menu-menu-secondary-menu li,
+#ics-resources li,
+#block-menu-menu-ics-and-resources li {
 	float: left;
 	padding: 0;
 	margin: 0 5px 0 0;
 }
+#block-menu-menu-secondary-menu li,
+#block-menu-menu-ics-and-resources li {
+	margin: 0 10px 0 0;
+}
 #main-menu li a,
-#secondary-menu li a {
-	color: #000;
+#block-menu-menu-secondary-menu li a,
+#ics-resources li a, 
+#block-menu-menu-ics-and-resources li a {
+	color: #fff;
 	text-transform: uppercase;
 	font-weight: bold;
 	display: block;
-	padding-left: 10px;
-	font-size: 1.2em;	
+	font-size: 1em;	
 	line-height: 1em;
+	text-decoration: none;
+}
+#ics-resources li a {
+	color: #000;
+	font-size: 1.2em;
+	text-decoration: underline
 }
 #main-menu li a {
-	color: #fff;
 	padding: 6px 10px 6px 10px;
 	font-size: 1.5em;
-	text-decoration: none;
+	padding-left: 10px;	
 }
 #main-menu li.active a {
 	background-color: #fff;
@@ -161,6 +186,9 @@ h2 a {
 .content {
 	margin-top: 10px;
 }
+.block-menu .content {
+	margin-top: 0;
+}
 #content, 
 #sidebar-first, 
 #sidebar-second, 
@@ -171,6 +199,49 @@ h2 a {
     display: inline;
     float: left;
     position: relative;
+}
+#footer {
+	background-color: #000;
+	position: relative;
+}
+#footer div.section {
+	padding: 32px 0;
+	overflow: hidden;
+}
+.reg-charity {
+	width: 600px;
+	float: left;
+	color: #ccc;
+	font-size: 0.9em;
+}
+.reg-charity a {
+	color: #ccc;
+}
+.social {
+	width: 180px;
+	float: right;
+	margin-right: 160px;
+}
+.social li {
+	display: block;
+	height: 20px;
+	margin: 0 0 5px 0;
+	line-height: 20px;
+}
+.social li a {
+	color: #fff;
+	text-transform: uppercase;
+	font-size: 1em;
+	line-height: 20px;
+	font-weight: bold;
+	border: none;
+	text-decoration: none;
+}
+.social li img {
+	display: inline;
+	position: relative;
+	top: 5px;
+	margin: 0 10px 0 0;
 }
 #crm-container a, #crm-container a:link {
 	color: #000;
@@ -288,6 +359,13 @@ h2 a {
 .comment-form .form-type-item {
 	display: none;
 	visibility: hidden;
+}
+div.status {
+	padding: 14px 20px 14px 60px;
+}
+div.messages {
+	background-position: 14px 12px;
+	border-width: 2px;
 }
 /* --------------- System Tabs  --------------- */
 

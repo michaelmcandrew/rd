@@ -268,7 +268,7 @@ SELECT module
       CRM_Utils_System::civiExit();
     }
 
-    CRM_Core_Session::setStatus(ts('Thank you. Your information has been saved.'));
+    CRM_Core_Session::setStatus(ts('Thank you.'));
 
     $session = CRM_Core_Session::singleton();
     // only replace user context if we do not have a postURL
