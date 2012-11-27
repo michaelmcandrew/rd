@@ -218,9 +218,9 @@ h2 a {
 	color: #ccc;
 }
 .social {
-	width: 180px;
+	width: 200px;
 	float: right;
-	margin-right: 160px;
+	margin-right: 150px;
 }
 .social li {
 	display: block;
@@ -363,10 +363,12 @@ h2 a {
 div.status {
 	padding: 14px 20px 14px 60px;
 }
-div.messages {
+#messages div.messages {
 	background-position: 14px 12px;
 	border-width: 2px;
+	font-size: 14px;
 }
+
 /* --------------- System Tabs  --------------- */
 
 .tabs {
