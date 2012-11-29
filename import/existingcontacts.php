@@ -97,8 +97,6 @@ while ($query_result->fetch()) {
 	
 	$external_id = trimString($query_result->external_id_0);
 //	print_r(".".strlen($external_id).".");
-	print_r("         ");
-	print_r("external ID=>".$external_id."<=  ");
 	
 	$title = trimString($query_result->title__4);
 	$first_name = trimString($query_result->first_name_5);
@@ -122,24 +120,24 @@ while ($query_result->fetch()) {
 	$historical_primary_contact = trimString($query_result->primary_contact_55);
 	$historical_alumni_date = trimString($query_result->years_volunteered_51);
 	$historical_alumni_country_programme = trimString($query_result->country_programme_50);
-	
+
 	$params = array(
 		'version' => '3',
 		'dupe_check' => true,
 		//'debug' => '1',
 		'contact_type' => 'Individual',
-		// 'contact_sub_type' => '',
-		'external_identifier' => $external_id,
+		'contact_sub_type' => '',
+		//'external_identifier' => $external_id,
 		'first_name' => $first_name,
 		'middle_name' => $middle_name,
 		'source' => 'Magic spreadsheet',
 		'last_name' => $surname,
-		// 'current_employer' => '',
-		// 'job_title' => '',
-		// 'suffix_id' => '',
-		// 'prefix' => '',
-		// 'prefix_id' => '',
-		// 'gender_id' => '',
+		'current_employer' => '',
+		'job_title' => '',
+		'suffix_id' => '',
+		'prefix' => '',
+		'prefix_id' => '',
+		'gender_id' => '',
 		'custom_53' => $historical_gift_aid,
 		'custom_54' => $historical_gv_post,
 		'custom_55' => $historical_gv_email,
@@ -148,7 +146,7 @@ while ($query_result->fetch()) {
 		'custom_58' => $historical_primary_contact,
 		'custom_59' => $historical_alumni_date,
 		'custom_60' => $historical_alumni_country_programme,
-		// 'email' => ''
+		'email' => ''
 		);
 	
 	if ($alumni=="Y"){
@@ -187,104 +185,29 @@ while ($query_result->fetch()) {
 	$phoneAndEmail = createPhoneAndEmailArray($query_result);
 	$emails = $phoneAndEmail['0'];
 	$phoneNumbers = $phoneAndEmail['1'];
-	if((count($emails)) > 0){
-		$params['email'] = $emails['0'];
-	}	
-	$contact_id = null;
-	$contact_id = get_contact_id($params['email']);
-	unset($params['contact_id']);
-	$params['contact_id'] = $contact_id;
-	
-	print_r($contact_id);
-	
-	$results = civicrm_api("Contact","create", $params);
-	handle_errors($results, $params);
-	createAddress($results['id'], $query_result);
-	//createPhoneOrEmail($results['id'],$query_result);
-	if((count($emails)) > 1){
+	if($emails){
 		foreach($emails as $email){
-			createEmail($results['id'],$email);
+			$params = array( 
+				'email' => $email,
+				'version' => 3,
+				//'first_name' => $first_name,
+				//'surname' => $last_name,
+				
+			);
+			$result = civicrm_api( 'contact','get',$params );
+			print_r($result['count']."  ");
+			$count = $count + $result['count'];
+			print_r($count." ");
 		}
 	}
-	if((count($phoneNumbers)) > 0){
-		foreach($phoneNumbers as $phoneNumber){
-			createPhone($results['id'],$phoneNumber);
-		}
-	}
-	// 
-	//if count email > 1, add extra emails	
-  
-	print_r($results['id']." ");
-
 }
 
 print_r("\n");
 print_r($i);
 print_r("\n");
 
-function get_contact_id($email){
-	if(!$email){
-		print_r('no email');
-		return null;
-		}else{
-	$result = civicrm_api( 'contact','get',array ('version' => '3','sequential' =>'1', 'email' => $email));
-	if ($result['count'] == 0){
-		return null;
-	}else{
-	$id = $result['values']['0']['contact_id'];
-	// print_r("ID: ".$id);exit;
-	return $id;
-	}
-	}
-}
 
-function createAddress($cid,$query_result){
-	//print_r($results);exit;
-	if(!($cid AND $query_result)){
-		return;
-	}
-		
-	$street_address = trimString($query_result->address__line__10);
-	$address_1 = trimString($query_result->address__line__11);
-	$address_2 = trimString($query_result->address__line__12);
-	$address_3 = trimString($query_result->address__line__13);
-	$city = trimString($query_result->towncity__14);
-	$postcode = trimString($query_result->post_codezip__16);
-	$country = trimString($query_result->country__17);
-	
-	if (strlen($postcode) < '13'){
-		//that's fine do nothing
-	}else{
-		print_r("\n"."postcode too long"."\n");
-		$postcode = '';
-	}
 
-	$addressParams=array('version' =>'3',
-				'contact_id' => $cid,
-				'location_type_id' => '3',
-				'street_address' => $street_address,
-				'supplemental_address_1' => $address_1,
-				'supplemental_address_2' => '',
-				'city' => $city,
-				'postal_code' => $postcode,
-				'country_id' =>'',
-				);
-	if (trimString($query_result->country__17) == "USA"){
-		$addressParams['country_id'] = '1228';
-	}elseif(trimString($query_result->country__17) == "United Kingdom"){
-		$addressParams['country_id'] = '1226';
-	}
-	if ($address_2 AND $address_3){
-		$addressParams['supplemental_address_2'] = $address_2.", ".$address_3;
-	}elseif($address_2){
-		$addressParams['supplemental_address_2'] = $address_2;
-	}elseif($address_3){
-		$addressParams['supplemental_address_2'] = $address_3;
-	}
-	
-	$address_create=civicrm_api("Address","create", $addressParams);
-	handle_errors($address_create, $addressParams);
-}
 
 function createPhoneAndEmailArray($query_result){
 	if(!$query_result){
@@ -308,35 +231,4 @@ function createPhoneAndEmailArray($query_result){
 		}
 	}
 	return array($emailArray, $phoneArray);
-}
-
-function createEmail($cid,$email){
-// 	print_r($results);exit;
-	if(!($cid AND $email)){
-		return;
-	}
-	
-	$emailParams=array('version' =>'3',
-	'contact_id' => $cid,
-	'location_type_id' => '3',
-	//'is_primary' => '1',
-	'email' => $email,
-	);
-	$email_create=civicrm_api("Email","create", $emailParams);
-	handle_errors($email_create, $emailParams);
-}
-
-function createPhone($cid,$phone){
-// 	print_r($results);exit;
-	if(!($cid AND $phone)){
-		return;
-	}
-	$phoneParams=array('version' =>'3',
-	'contact_id' => $cid,
-	'location_type_id' => '3',
-	'phone' => $phone,
-	'phone_type_id' => '1',
-	);
-	$phone_create=civicrm_api("Phone","create", $phoneParams);
-	handle_errors($phone_create, $phoneParams);
 }

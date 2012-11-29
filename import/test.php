@@ -1,5 +1,5 @@
 <?php
 
-print_r("hello"
+print_r("hello");
 
 ?>
