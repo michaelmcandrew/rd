@@ -90,8 +90,8 @@
 					</a>
 				<?php endif; ?>
 
-				<?php print theme('links', array('links' => menu_navigation_links('menu-secondary-menu'), 'attributes' => array('id'=> array('secondary-menu')) ));?>
-				
+				<?php print theme('links', array('links' => menu_navigation_links('menu-ics-and-resources'), 'attributes' => array('id'=> array('ics-resources')) ));?>
+						
 			</div>
 		
 		</div>
